@@ -29,6 +29,14 @@ namespace Invader {
             return 0;
         }
 
+        // Shadowrun maps don't have a CRC32 at all
+        if(engine == HEK::CacheFileEngine::CACHE_FILE_SHADOWRUN) {
+            if(check_dirty) {
+                *check_dirty = false;
+            }
+            return 0;
+        }
+
         #define CRC_DATA(data_start, data_end) \
             if(new_crc) { \
                 data_crc.insert(data_crc.end(), data + data_start, data + data_end); \

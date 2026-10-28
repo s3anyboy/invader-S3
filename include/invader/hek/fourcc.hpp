@@ -91,7 +91,19 @@ namespace Invader::HEK {
         TAG_FOURCC_VEHICLE = 0x76656869,
         TAG_FOURCC_WEAPON = 0x77656170,
         TAG_FOURCC_WIND = 0x77696E64,
-        TAG_FOURCC_WEAPON_HUD_INTERFACE = 0x77706869
+        TAG_FOURCC_WEAPON_HUD_INTERFACE = 0x77706869,
+
+        // Shadowrun (cancelled Xbox game built on the Halo engine)
+        TAG_FOURCC_SHADOWRUN_BUY_MENU = 0x6275796D,
+        TAG_FOURCC_SHADOWRUN_MAGIC_1_EFFECT_DATA = 0x6D316564,
+        TAG_FOURCC_SHADOWRUN_MAGIC_2_EFFECT_DATA = 0x6D326564,
+        TAG_FOURCC_SHADOWRUN_MAGIC_3_EFFECT_DATA = 0x6D336564,
+        TAG_FOURCC_SHADOWRUN_ACTOR = 0x73726163,
+        TAG_FOURCC_SHADOWRUN_UNIT = 0x73727564,
+        TAG_FOURCC_SHADOWRUN_WEAPON = 0x73727764,
+        TAG_FOURCC_SHADOWRUN_TECH_1_EFFECT_DATA = 0x74316564,
+        TAG_FOURCC_SHADOWRUN_TECH_2_EFFECT_DATA = 0x74326564,
+        TAG_FOURCC_SHADOWRUN_TECH_3_EFFECT_DATA = 0x74336564
     };
 
     /**
@@ -306,6 +318,26 @@ namespace Invader::HEK {
              return "wind";
          case TagFourCC::TAG_FOURCC_WEAPON_HUD_INTERFACE:
              return "weapon_hud_interface";
+         case TagFourCC::TAG_FOURCC_SHADOWRUN_BUY_MENU:
+             return "shadowrun_buy_menu";
+         case TagFourCC::TAG_FOURCC_SHADOWRUN_MAGIC_1_EFFECT_DATA:
+             return "shadowrun_magic_1_effect_data";
+         case TagFourCC::TAG_FOURCC_SHADOWRUN_MAGIC_2_EFFECT_DATA:
+             return "shadowrun_magic_2_effect_data";
+         case TagFourCC::TAG_FOURCC_SHADOWRUN_MAGIC_3_EFFECT_DATA:
+             return "shadowrun_magic_3_effect_data";
+         case TagFourCC::TAG_FOURCC_SHADOWRUN_ACTOR:
+             return "shadowrun_actor";
+         case TagFourCC::TAG_FOURCC_SHADOWRUN_UNIT:
+             return "shadowrun_unit";
+         case TagFourCC::TAG_FOURCC_SHADOWRUN_WEAPON:
+             return "shadowrun_weapon";
+         case TagFourCC::TAG_FOURCC_SHADOWRUN_TECH_1_EFFECT_DATA:
+             return "shadowrun_tech_1_effect_data";
+         case TagFourCC::TAG_FOURCC_SHADOWRUN_TECH_2_EFFECT_DATA:
+             return "shadowrun_tech_2_effect_data";
+         case TagFourCC::TAG_FOURCC_SHADOWRUN_TECH_3_EFFECT_DATA:
+             return "shadowrun_tech_3_effect_data";
          case TagFourCC::TAG_FOURCC_NULL:
              break;
          }

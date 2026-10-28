@@ -43,7 +43,8 @@ namespace Invader {
             map.loc_data = std::move(loc_data);
             map.load_map();
         }
-        catch(Exception &) {
+        catch(std::exception &e) {
+            eprintf_error("Failed to load map: %s", e.what());
             throw InvalidMapException();
         }
         return map;
@@ -169,6 +170,8 @@ namespace Invader {
     }
 
     std::byte *Map::resolve_tag_data_pointer(HEK::Pointer pointer, std::size_t minimum_size) {
+        fprintf(stderr, "DBG resolve %08X base %08X off %zu min %zu len %zu\n", static_cast<unsigned>(pointer), static_cast<unsigned>(this->base_memory_address), static_cast<std::size_t>(pointer - this->base_memory_address), minimum_size, this->tag_data_length);
+
         return this->get_tag_data_at_offset(pointer - this->base_memory_address, minimum_size);
     }
 
@@ -204,6 +207,9 @@ namespace Invader {
         auto *header_maybe = reinterpret_cast<const CacheFileHeader *>(this->get_data_at_offset(0, sizeof(CacheFileHeader)));
 
         auto continue_loading_map = [](Map &map, auto &header) {
+            // Shadowrun headers don't have a decompressed size or CRC32
+            constexpr bool is_shadowrun = std::is_same_v<std::decay_t<decltype(header)>, HEK::ShadowrunCacheFileHeader>;
+
             // Set the cache_version and type
             map.cache_version = header.engine;
             map.header_type = header.map_type;
@@ -223,6 +229,7 @@ namespace Invader {
                 case CacheFileEngine::CACHE_FILE_NATIVE:
                 case CacheFileEngine::CACHE_FILE_MCC_CEA:
                 case CacheFileEngine::CACHE_FILE_XBOX:
+                case CacheFileEngine::CACHE_FILE_SHADOWRUN:
                     break;
                 default:
                     throw UnsupportedMapEngineException();
@@ -241,13 +248,29 @@ namespace Invader {
             // Eschaton the base memory address (base memory address is inferred with the tag data address)
             if(game_engine_info_maybe->base_memory_address_is_inferred) {
                 auto *tag_data_header = reinterpret_cast<HEK::CacheFileTagDataHeader *>(map.tag_data);
-                map.base_memory_address = tag_data_header->tag_array_address - (map.cache_version == CacheFileEngine::CACHE_FILE_XBOX ? sizeof(HEK::CacheFileTagDataHeaderXbox) : sizeof(HEK::CacheFileTagDataHeaderPC));
+                if(map.cache_version == CacheFileEngine::CACHE_FILE_SHADOWRUN) {
+                    // The header stores the address of the last tag array entry. Since the tag array ends the tag data, the tag data
+                    // begins at the tag array address minus the tag data size. This must account for pointer alignment.
+                    auto *shadowrun_tag_data_header = reinterpret_cast<HEK::ShadowrunCacheFileTagDataHeader *>(map.tag_data);
+                    map.base_memory_address = shadowrun_tag_data_header->tag_array_address + sizeof(HEK::CacheFileTagDataTag) - map.tag_data_length;
+                }
+                else {
+                    map.base_memory_address = tag_data_header->tag_array_address - (map.cache_version == CacheFileEngine::CACHE_FILE_XBOX ? sizeof(HEK::CacheFileTagDataHeaderXbox) : sizeof(HEK::CacheFileTagDataHeaderPC));
+                }
             }
 
             map.scenario_name = header.name;
             map.build = header.build;
-            map.header_decompressed_file_size = header.decompressed_file_size;
-            map.header_crc32 = header.crc32;
+
+            // Shadowrun headers don't have a decompressed size or CRC32
+            if constexpr(is_shadowrun) {
+                map.header_decompressed_file_size = map.data.size();
+                map.header_crc32 = 0;
+            }
+            else {
+                map.header_decompressed_file_size = header.decompressed_file_size;
+                map.header_crc32 = header.crc32;
+            }
         };
 
         // Check if the literals are invalid
@@ -262,6 +285,9 @@ namespace Invader {
         }
         else if(header_maybe->engine == CacheFileEngine::CACHE_FILE_NATIVE) {
             continue_loading_map(*this, *reinterpret_cast<const NativeCacheFileHeader *>(header_maybe));
+        }
+        else if(header_maybe->engine == CacheFileEngine::CACHE_FILE_SHADOWRUN) {
+            continue_loading_map(*this, *reinterpret_cast<const ShadowrunCacheFileHeader *>(header_maybe));
         }
         else {
             continue_loading_map(*this, *header_maybe);
@@ -282,11 +308,39 @@ namespace Invader {
 
         // Preallocate tags
         const auto &header = *reinterpret_cast<const CacheFileTagDataHeader *>(this->get_tag_data_at_offset(0, sizeof(CacheFileTagDataHeader)));
-        std::size_t tag_count = header.tag_count;
+
+        // Shadowrun stores its tag array at the end of the tag data, and the header only contains a pointer to it and the scenario index
+        std::optional<ShadowrunCacheFileTagDataHeader> shadowrun_header;
+        std::size_t shadowrun_tag_array_offset = 0;
+        std::size_t tag_count;
+        if(this->get_cache_version() == HEK::CacheFileEngine::CACHE_FILE_SHADOWRUN) {
+            // The tag array is the last thing in the tag data, so the end of the tag data is the end of the tag array.
+            // The address in the header points to the last entry, so the tag count is derived from it.
+            shadowrun_header = *reinterpret_cast<const ShadowrunCacheFileTagDataHeader *>(this->get_tag_data_at_offset(0, sizeof(ShadowrunCacheFileTagDataHeader)));
+            auto tag_array_end = static_cast<std::size_t>(shadowrun_header->tag_array_address - this->base_memory_address) + sizeof(CacheFileTagDataTag);
+            if(tag_array_end != this->tag_data_length || tag_array_end < sizeof(ShadowrunCacheFileTagDataHeader) + sizeof(CacheFileTagDataTag)) {
+                throw OutOfBoundsException();
+            }
+            tag_count = (tag_array_end - sizeof(ShadowrunCacheFileTagDataHeader)) / sizeof(CacheFileTagDataTag);
+            shadowrun_tag_array_offset = tag_array_end - tag_count * sizeof(CacheFileTagDataTag);
+
+            if(tag_count == 0 || shadowrun_tag_array_offset < sizeof(ShadowrunCacheFileTagDataHeader)) {
+                throw OutOfBoundsException();
+            }
+
+        }
+        else {
+            tag_count = header.tag_count;
+        }
         this->tags.reserve(tag_count);
 
         // Determine our scenario tag
-        this->scenario_tag_id = header.scenario_tag.read().index;
+        if(shadowrun_header.has_value()) {
+            this->scenario_tag_id = shadowrun_header->scenario_tag_index;
+        }
+        else {
+            this->scenario_tag_id = header.scenario_tag.read().index;
+        }
         if(this->scenario_tag_id >= tag_count) {
             throw OutOfBoundsException();
         }
@@ -302,22 +356,30 @@ namespace Invader {
             set_model_stuff(native_header);
             this->asset_indices_offset = native_header.raw_data_indices;
         }
+        else if(this->get_cache_version() == HEK::CacheFileEngine::CACHE_FILE_SHADOWRUN) {
+            // Shadowrun stores model data outside of the cache file, so there's nothing to read here
+            this->model_data_offset = 0;
+            this->model_data_size = 0;
+            this->model_index_offset = 0;
+        }
         else if(this->get_cache_version() != HEK::CacheFileEngine::CACHE_FILE_XBOX) {
             set_model_stuff(*reinterpret_cast<const CacheFileTagDataHeaderPC *>(this->get_tag_data_at_offset(0, sizeof(CacheFileTagDataHeaderPC))));
         }
 
-        auto do_populate_the_array = [&map, &tag_count](auto *tags) {
+        auto do_populate_the_array = [&map, &tag_count, &shadowrun_tag_array_offset](auto *tags) {
             // Have a pointer for the end of the tag data so we can check to make sure things aren't null terminated
             const char *tag_data_end = reinterpret_cast<const char *>(map.tag_data) + map.tag_data_length;
 
             for(std::size_t i = 0; i < tag_count; i++) {
+
                 map.tags.push_back(Tag(map));
                 auto &tag = map.tags[i];
                 tag.tag_fourcc = tags[i].primary_class;
-                tag.tag_data_index_offset = reinterpret_cast<const std::byte *>(tags + i) - map.tag_data;
+                tag.tag_data_index_offset = static_cast<std::size_t>(reinterpret_cast<const std::byte *>(tags + i) - map.tag_data);
                 tag.tag_index = i;
                 
                 // Set the map type
+
                 if(i == map.scenario_tag_id) {
                     map.type = reinterpret_cast<Scenario<LittleEndian> *>(map.resolve_tag_data_pointer(tags[i].tag_data, sizeof(Scenario<LittleEndian>)))->type;
                 }
@@ -370,7 +432,7 @@ namespace Invader {
                     tag.path = new_path;
                 }
 
-                if(tag.tag_fourcc == TagFourCC::TAG_FOURCC_SCENARIO_STRUCTURE_BSP && map.cache_version != HEK::CacheFileEngine::CACHE_FILE_NATIVE) {
+                if(tag.tag_fourcc == TagFourCC::TAG_FOURCC_SCENARIO_STRUCTURE_BSP && map.cache_version != HEK::CacheFileEngine::CACHE_FILE_NATIVE && map.cache_version != HEK::CacheFileEngine::CACHE_FILE_SHADOWRUN) {
                     continue;
                 }
                 else if(sizeof(tags->tag_data) == sizeof(HEK::Pointer) && reinterpret_cast<const CacheFileTagDataTag *>(tags)[i].indexed) {
@@ -497,6 +559,18 @@ namespace Invader {
         if(this->cache_version == HEK::CacheFileEngine::CACHE_FILE_NATIVE) {
             try {
                 do_populate_the_array(reinterpret_cast<const NativeCacheFileTagDataTag *>(this->resolve_tag_data_pointer(header.tag_array_address, sizeof(CacheFileTagDataTag) * tag_count)));
+            }
+            catch(std::exception &) {
+                eprintf_error("Failed to populate the tag array");
+                throw;
+            }
+        }
+        else if(shadowrun_header.has_value()) {
+            try {
+
+
+
+                do_populate_the_array(reinterpret_cast<const CacheFileTagDataTag *>(this->get_tag_data_at_offset(shadowrun_tag_array_offset, sizeof(CacheFileTagDataTag) * tag_count)));
             }
             catch(std::exception &) {
                 eprintf_error("Failed to populate the tag array");
@@ -647,7 +721,7 @@ namespace Invader {
         if(this->get_crc32() != this->get_header_crc32() || this->is_protected() || this->data.size() != this->get_header_decompressed_file_size() || this->get_type() != this->get_header_type()) {
             return false;
         }
-        else if(this->get_cache_version() != HEK::CacheFileEngine::CACHE_FILE_NATIVE) {
+        else if(this->get_cache_version() != HEK::CacheFileEngine::CACHE_FILE_NATIVE && this->get_cache_version() != HEK::CacheFileEngine::CACHE_FILE_SHADOWRUN) {
             auto tag_count = this->get_tag_count();
             for(std::size_t i = 0; i < tag_count; i++) {
                 auto &tag = this->get_tag(i);

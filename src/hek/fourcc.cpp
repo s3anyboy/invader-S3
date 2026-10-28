@@ -102,6 +102,18 @@ namespace Invader::HEK {
         MATCH_TAG_CLASS("wind", TAG_FOURCC_WIND)
         MATCH_TAG_CLASS("weapon_hud_interface", TAG_FOURCC_WEAPON_HUD_INTERFACE)
 
+        // Shadowrun
+        MATCH_TAG_CLASS("shadowrun_buy_menu", TAG_FOURCC_SHADOWRUN_BUY_MENU)
+        MATCH_TAG_CLASS("shadowrun_magic_1_effect_data", TAG_FOURCC_SHADOWRUN_MAGIC_1_EFFECT_DATA)
+        MATCH_TAG_CLASS("shadowrun_magic_2_effect_data", TAG_FOURCC_SHADOWRUN_MAGIC_2_EFFECT_DATA)
+        MATCH_TAG_CLASS("shadowrun_magic_3_effect_data", TAG_FOURCC_SHADOWRUN_MAGIC_3_EFFECT_DATA)
+        MATCH_TAG_CLASS("shadowrun_actor", TAG_FOURCC_SHADOWRUN_ACTOR)
+        MATCH_TAG_CLASS("shadowrun_unit", TAG_FOURCC_SHADOWRUN_UNIT)
+        MATCH_TAG_CLASS("shadowrun_weapon", TAG_FOURCC_SHADOWRUN_WEAPON)
+        MATCH_TAG_CLASS("shadowrun_tech_1_effect_data", TAG_FOURCC_SHADOWRUN_TECH_1_EFFECT_DATA)
+        MATCH_TAG_CLASS("shadowrun_tech_2_effect_data", TAG_FOURCC_SHADOWRUN_TECH_2_EFFECT_DATA)
+        MATCH_TAG_CLASS("shadowrun_tech_3_effect_data", TAG_FOURCC_SHADOWRUN_TECH_3_EFFECT_DATA)
+
         return TAG_FOURCC_NULL;
     }
 

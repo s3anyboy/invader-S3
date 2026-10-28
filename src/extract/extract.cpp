@@ -147,7 +147,7 @@ int main(int argc, const char **argv) {
         // Check if we can do things to it
         if(header.valid()) {
             auto cache_version = header.engine.read();
-            if(cache_version != HEK::CACHE_FILE_NATIVE && cache_version != HEK::CACHE_FILE_XBOX) {
+            if(cache_version != HEK::CACHE_FILE_NATIVE && cache_version != HEK::CACHE_FILE_XBOX && cache_version != HEK::CACHE_FILE_SHADOWRUN) {
                 bitmaps = open_map_possibly("bitmaps.map");
                 sounds = open_map_possibly("sounds.map");
 

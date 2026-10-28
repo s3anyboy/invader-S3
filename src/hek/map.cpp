@@ -94,6 +94,10 @@ namespace Invader::HEK {
     static constexpr std::uint16_t MCC_CEA_MAXIMUM_SCENARIO_SCRIPT_NODES = static_cast<std::uint16_t>(INT16_MAX);
     static constexpr std::uint16_t ORIGINAL_MAXIMUM_SCENARIO_SCRIPT_NODES = 19001;
 
+    static constexpr const Pointer64 SHADOWRUN_BASE_MEMORY_ADDRESS = 0x806D0000;
+    static constexpr const Pointer64 SHADOWRUN_TAG_SPACE_LENGTH = (32 * 1024 * 1024);
+    static constexpr const Pointer64 SHADOWRUN_MAX_FILE_SIZE = static_cast<Pointer64>(INT32_MAX);
+
     #define PC_BOILERPLATE \
         .required_tags = { \
             .all = USE_TAG_ARRAY(PC_REQUIRED_TAGS), \
@@ -115,6 +119,24 @@ namespace Invader::HEK {
             .maximum_file_size = UINT64_MAX,
             .maximum_scenario_script_nodes = MCC_CEA_MAXIMUM_SCENARIO_SCRIPT_NODES,
             .bsps_occupy_tag_space = false,
+            .required_tags = {
+                .all = USE_TAG_ARRAY(INVADER_REQUIRED_TAGS)
+            }
+        },
+        {
+            .name = "Shadowrun (Prototype)",
+            .shorthand = "shadowrun",
+            .engine = GameEngine::GAME_ENGINE_SHADOWRUN,
+            .cache_version = CacheFileEngine::CACHE_FILE_SHADOWRUN,
+            .build_string = "",
+            .build_string_is_enforced = false,
+            .base_memory_address = SHADOWRUN_BASE_MEMORY_ADDRESS,
+            .base_memory_address_is_inferred = true,
+            .tag_space_length = SHADOWRUN_TAG_SPACE_LENGTH,
+            .maximum_file_size = SHADOWRUN_MAX_FILE_SIZE,
+            .maximum_scenario_script_nodes = ORIGINAL_MAXIMUM_SCENARIO_SCRIPT_NODES,
+            .bsps_occupy_tag_space = false,
+            .uses_indexing = true,
             .required_tags = {
                 .all = USE_TAG_ARRAY(INVADER_REQUIRED_TAGS)
             }

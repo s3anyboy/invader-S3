@@ -81,6 +81,10 @@ namespace Invader::Info {
             }
         }
         
+        // Shadowrun maps don't have a CRC32 in the header, so there's nothing to compare against
+        auto has_crc32 = cache_version != HEK::CacheFileEngine::CACHE_FILE_SHADOWRUN;
+        
+        
         // Tag count, are any stubbed?
         auto tag_count = map.get_tag_count();
         auto tag_data_size = BYTES_TO_MiB(map.get_tag_data_length());
@@ -97,7 +101,7 @@ namespace Invader::Info {
         auto crc_matches = map.get_header_crc32() == crc;
         
         // TODODILE: Figure out how to check an Xbox map's integrity
-        if(cache_version != HEK::CacheFileEngine::CACHE_FILE_XBOX) {
+        if(cache_version != HEK::CacheFileEngine::CACHE_FILE_XBOX && has_crc32) {
             // CRC32
             if(crc_matches) {
                 PRINT_LINE(oprintf_success, "CRC32:", "0x%08X (matches header)", crc);
@@ -129,7 +133,7 @@ namespace Invader::Info {
         std::size_t external_loc = find_external_tags_indices(map, Map::DataMapType::DATA_MAP_LOC, true, true).size();
         std::size_t total_external = external_bitmaps + external_sounds + external_loc;
         
-        if(cache_version != HEK::CacheFileEngine::CACHE_FILE_NATIVE && cache_version != HEK::CacheFileEngine::CACHE_FILE_XBOX) {
+        if(cache_version != HEK::CacheFileEngine::CACHE_FILE_NATIVE && cache_version != HEK::CacheFileEngine::CACHE_FILE_XBOX && cache_version != HEK::CacheFileEngine::CACHE_FILE_SHADOWRUN) {
             if(total_external == 0) {
                 PRINT_LINE(oprintf_success, "External tags:", "%s", "None");
             }
