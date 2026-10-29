@@ -1,6 +1,6 @@
 # SPDX-License-Identifier: GPL-3.0-only
 
-if(NOT DEFINED ${INVADER_SOUND})
+if(NOT DEFINED INVADER_SOUND)
     set(INVADER_SOUND true CACHE BOOL "Build invader-sound (builds sound tags)")
 endif()
 

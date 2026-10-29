@@ -1,6 +1,6 @@
 # SPDX-License-Identifier: GPL-3.0-only
 
-if(NOT DEFINED ${INVADER_STRING})
+if(NOT DEFINED INVADER_STRING)
     set(INVADER_STRING true CACHE BOOL "Build invader-string (generates string tags)")
 endif()
 

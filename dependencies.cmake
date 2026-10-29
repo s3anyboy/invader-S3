@@ -45,8 +45,24 @@ corrosion_import_crate(MANIFEST_PATH ext/riat/riatc/Cargo.toml)
 # Audio things
 set(DEP_AUDIO_LIBRARIES FLAC vorbisenc vorbisfile vorbis ogg samplerate)
 
+# The audio libraries are linked by bare name, so their directory must be on the linker search path
+if(DEFINED VCPKG_INSTALLED_DIR AND NOT "${VCPKG_INSTALLED_DIR}" STREQUAL "")
+    link_directories("${VCPKG_INSTALLED_DIR}/${VCPKG_TARGET_TRIPLET}/lib")
+endif()
+
+# libsquish isn't packaged by most package managers, so allow its location to be given explicitly
+set(SQUISH_INCLUDE_DIR "" CACHE PATH "Set the path to libsquish's squish.h")
+set(SQUISH_LIBRARY "" CACHE FILEPATH "Set the path to the libsquish library (e.g. squish.lib)")
+if(EXISTS "${SQUISH_INCLUDE_DIR}/squish.h")
+    include_directories("${SQUISH_INCLUDE_DIR}")
+endif()
+
 # Set dependencies
-set(DEP_SQUISH_LIBRARIES squish)
+if("${SQUISH_LIBRARY}" STREQUAL "")
+    set(DEP_SQUISH_LIBRARIES squish)
+else()
+    set(DEP_SQUISH_LIBRARIES "${SQUISH_LIBRARY}")
+endif()
 
 # Again, run a dependency script if needed
 if(DEFINED INVADER_BUILD_DEPENDENCY_SCRIPT)

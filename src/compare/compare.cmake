@@ -1,6 +1,6 @@
 # SPDX-License-Identifier: GPL-3.0-only
 
-if(NOT DEFINED ${INVADER_COMPARE})
+if(NOT DEFINED INVADER_COMPARE)
     set(INVADER_COMPARE true CACHE BOOL "Build invader-compare (compares tag directories)")
 endif()
 

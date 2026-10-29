@@ -81,8 +81,8 @@ namespace Invader::Info {
             }
         }
         
-        // Shadowrun maps don't have a CRC32 in the header, so there's nothing to compare against
-        auto has_crc32 = cache_version != HEK::CacheFileEngine::CACHE_FILE_SHADOWRUN;
+        // Xbox-based caches (including Shadowrun) don't have a CRC32 in the header
+        auto has_crc32 = cache_version != HEK::CacheFileEngine::CACHE_FILE_XBOX;
         
         
         // Tag count, are any stubbed?
@@ -133,7 +133,7 @@ namespace Invader::Info {
         std::size_t external_loc = find_external_tags_indices(map, Map::DataMapType::DATA_MAP_LOC, true, true).size();
         std::size_t total_external = external_bitmaps + external_sounds + external_loc;
         
-        if(cache_version != HEK::CacheFileEngine::CACHE_FILE_NATIVE && cache_version != HEK::CacheFileEngine::CACHE_FILE_XBOX && cache_version != HEK::CacheFileEngine::CACHE_FILE_SHADOWRUN) {
+        if(cache_version != HEK::CacheFileEngine::CACHE_FILE_NATIVE && cache_version != HEK::CacheFileEngine::CACHE_FILE_XBOX) {
             if(total_external == 0) {
                 PRINT_LINE(oprintf_success, "External tags:", "%s", "None");
             }

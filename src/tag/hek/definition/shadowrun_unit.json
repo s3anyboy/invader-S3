@@ -1,0 +1,378 @@
+[
+    {
+        "name": "srud_block_0160_1",
+        "fields": [
+            {
+                "type": "pad",
+                "size": 2560
+            }
+        ],
+        "type": "struct",
+        "size": 2560
+    },
+    {
+        "name": "ShadowrunUnit",
+        "fields": [
+            {
+                "type": "pad",
+                "size": 256
+            },
+            {
+                "name": "reference 0100",
+                "type": "TagDependency",
+                "classes": [
+                    "shadowrun_magic_1_effect_data"
+                ]
+            },
+            {
+                "name": "reference 0110",
+                "type": "TagDependency",
+                "classes": [
+                    "shadowrun_magic_2_effect_data"
+                ]
+            },
+            {
+                "name": "reference 0120",
+                "type": "TagDependency",
+                "classes": [
+                    "shadowrun_magic_3_effect_data"
+                ]
+            },
+            {
+                "name": "reference 0130",
+                "type": "TagDependency",
+                "classes": [
+                    "shadowrun_tech_1_effect_data"
+                ]
+            },
+            {
+                "name": "reference 0140",
+                "type": "TagDependency",
+                "classes": [
+                    "shadowrun_tech_2_effect_data"
+                ]
+            },
+            {
+                "name": "reference 0150",
+                "type": "TagDependency",
+                "classes": [
+                    "shadowrun_tech_3_effect_data"
+                ]
+            },
+            {
+                "name": "block 0160",
+                "type": "TagReflexive",
+                "struct": "srud_block_0160_1"
+            },
+            {
+                "type": "pad",
+                "size": 180
+            },
+            {
+                "name": "reference 0220",
+                "type": "TagDependency",
+                "classes": [
+                    "shadowrun_weapon"
+                ]
+            },
+            {
+                "type": "pad",
+                "size": 464
+            },
+            {
+                "name": "reference 0400",
+                "type": "TagDependency",
+                "classes": [
+                    "weapon_hud_interface"
+                ]
+            },
+            {
+                "name": "reference 0410",
+                "type": "TagDependency",
+                "classes": [
+                    "bitmap"
+                ]
+            },
+            {
+                "name": "reference 0420",
+                "type": "TagDependency",
+                "classes": [
+                    "bitmap"
+                ]
+            },
+            {
+                "name": "reference 0430",
+                "type": "TagDependency",
+                "classes": [
+                    "weapon"
+                ]
+            },
+            {
+                "name": "reference 0440",
+                "type": "TagDependency",
+                "classes": [
+                    "weapon"
+                ]
+            },
+            {
+                "name": "reference 0450",
+                "type": "TagDependency",
+                "classes": [
+                    "weapon"
+                ]
+            },
+            {
+                "name": "reference 0460",
+                "type": "TagDependency",
+                "classes": [
+                    "weapon"
+                ]
+            },
+            {
+                "name": "reference 0470",
+                "type": "TagDependency",
+                "classes": [
+                    "weapon"
+                ]
+            },
+            {
+                "name": "reference 0480",
+                "type": "TagDependency",
+                "classes": [
+                    "weapon"
+                ]
+            },
+            {
+                "name": "reference 0490",
+                "type": "TagDependency",
+                "classes": [
+                    "weapon"
+                ]
+            },
+            {
+                "name": "reference 04a0",
+                "type": "TagDependency",
+                "classes": [
+                    "weapon"
+                ]
+            },
+            {
+                "name": "reference 04b0",
+                "type": "TagDependency",
+                "classes": [
+                    "weapon"
+                ]
+            },
+            {
+                "type": "pad",
+                "size": 48
+            },
+            {
+                "name": "reference 04f0",
+                "type": "TagDependency",
+                "classes": [
+                    "shadowrun_buy_menu"
+                ]
+            },
+            {
+                "type": "pad",
+                "size": 4
+            },
+            {
+                "name": "unknown int 0504",
+                "type": "int32"
+            },
+            {
+                "name": "unknown int 0508",
+                "type": "int32"
+            },
+            {
+                "name": "unknown int 050c",
+                "type": "int32"
+            },
+            {
+                "name": "unknown int 0510",
+                "type": "int32"
+            },
+            {
+                "name": "unknown int 0514",
+                "type": "int32"
+            },
+            {
+                "name": "unknown int 0518",
+                "type": "int32"
+            },
+            {
+                "name": "unknown int 051c",
+                "type": "int32"
+            },
+            {
+                "name": "unknown int 0520",
+                "type": "int32"
+            },
+            {
+                "name": "unknown int 0524",
+                "type": "int32"
+            },
+            {
+                "name": "unknown int 0528",
+                "type": "int32"
+            },
+            {
+                "name": "unknown int 052c",
+                "type": "int32"
+            },
+            {
+                "name": "unknown int 0530",
+                "type": "int32"
+            },
+            {
+                "name": "unknown int 0534",
+                "type": "int32"
+            },
+            {
+                "name": "unknown int 0538",
+                "type": "int32"
+            },
+            {
+                "name": "unknown int 053c",
+                "type": "int32"
+            },
+            {
+                "name": "unknown int 0540",
+                "type": "int32"
+            },
+            {
+                "name": "unknown int 0544",
+                "type": "int32"
+            },
+            {
+                "name": "unknown int 0548",
+                "type": "int32"
+            },
+            {
+                "name": "unknown int 054c",
+                "type": "int32"
+            },
+            {
+                "name": "unknown int 0550",
+                "type": "int32"
+            },
+            {
+                "name": "unknown int 0554",
+                "type": "int32"
+            },
+            {
+                "name": "unknown int 0558",
+                "type": "int32"
+            },
+            {
+                "name": "unknown int 055c",
+                "type": "int32"
+            },
+            {
+                "type": "pad",
+                "size": 4
+            },
+            {
+                "name": "unknown int 0564",
+                "type": "int32"
+            },
+            {
+                "name": "unknown int 0568",
+                "type": "int32"
+            },
+            {
+                "name": "unknown int 056c",
+                "type": "int32"
+            },
+            {
+                "name": "unknown int 0570",
+                "type": "int32"
+            },
+            {
+                "name": "unknown int 0574",
+                "type": "int32"
+            },
+            {
+                "name": "unknown int 0578",
+                "type": "int32"
+            },
+            {
+                "name": "unknown int 057c",
+                "type": "int32"
+            },
+            {
+                "name": "unknown int 0580",
+                "type": "int32"
+            },
+            {
+                "name": "unknown int 0584",
+                "type": "int32"
+            },
+            {
+                "name": "unknown int 0588",
+                "type": "int32"
+            },
+            {
+                "name": "unknown int 058c",
+                "type": "int32"
+            },
+            {
+                "name": "unknown int 0590",
+                "type": "int32"
+            },
+            {
+                "name": "unknown int 0594",
+                "type": "int32"
+            },
+            {
+                "name": "unknown int 0598",
+                "type": "int32"
+            },
+            {
+                "name": "unknown int 059c",
+                "type": "int32"
+            },
+            {
+                "name": "unknown int 05a0",
+                "type": "int32"
+            },
+            {
+                "name": "unknown int 05a4",
+                "type": "int32"
+            },
+            {
+                "name": "unknown int 05a8",
+                "type": "int32"
+            },
+            {
+                "name": "unknown int 05ac",
+                "type": "int32"
+            },
+            {
+                "name": "unknown int 05b0",
+                "type": "int32"
+            },
+            {
+                "name": "unknown int 05b4",
+                "type": "int32"
+            },
+            {
+                "name": "unknown int 05b8",
+                "type": "int32"
+            },
+            {
+                "name": "unknown int 05bc",
+                "type": "int32"
+            },
+            {
+                "type": "pad",
+                "size": 64
+            }
+        ],
+        "type": "struct",
+        "size": 1536,
+        "class": "shadowrun_unit"
+    }
+]

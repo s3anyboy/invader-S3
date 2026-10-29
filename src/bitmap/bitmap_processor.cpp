@@ -560,7 +560,7 @@ namespace Invader {
                     float delta = *alpha_bias * UINT8_MAX * (m + 1) / mipmap_count;
                     
                     while(first < last) {
-                        first->alpha = std::max(0, std::min(UINT8_MAX, static_cast<int>(delta + first->alpha + 0.5)));
+                        first->alpha = std::max(0, std::min<int>(UINT8_MAX, static_cast<int>(delta + first->alpha + 0.5)));
                         first++;
                     }
                 }

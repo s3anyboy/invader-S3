@@ -1,6 +1,6 @@
 # SPDX-License-Identifier: GPL-3.0-only
 
-if(NOT DEFINED ${INVADER_REFACTOR})
+if(NOT DEFINED INVADER_REFACTOR)
     set(INVADER_REFACTOR true CACHE BOOL "Build invader-refactor (refactors tag paths)")
 endif()
 

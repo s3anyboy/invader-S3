@@ -739,6 +739,18 @@ namespace Invader {
             COMPILE_TAG_CLASS(Wind, TAG_FOURCC_WIND)
             COMPILE_TAG_CLASS(WeaponHUDInterface, TAG_FOURCC_WEAPON_HUD_INTERFACE)
 
+            // Shadowrun prototype classes
+            COMPILE_TAG_CLASS(ShadowrunActor, TAG_FOURCC_SHADOWRUN_ACTOR)
+            COMPILE_TAG_CLASS(ShadowrunMagic1EffectData, TAG_FOURCC_SHADOWRUN_MAGIC_1_EFFECT_DATA)
+            COMPILE_TAG_CLASS(ShadowrunMagic2EffectData, TAG_FOURCC_SHADOWRUN_MAGIC_2_EFFECT_DATA)
+            COMPILE_TAG_CLASS(ShadowrunMagic3EffectData, TAG_FOURCC_SHADOWRUN_MAGIC_3_EFFECT_DATA)
+            COMPILE_TAG_CLASS(ShadowrunTech1EffectData, TAG_FOURCC_SHADOWRUN_TECH_1_EFFECT_DATA)
+            COMPILE_TAG_CLASS(ShadowrunTech2EffectData, TAG_FOURCC_SHADOWRUN_TECH_2_EFFECT_DATA)
+            COMPILE_TAG_CLASS(ShadowrunTech3EffectData, TAG_FOURCC_SHADOWRUN_TECH_3_EFFECT_DATA)
+            COMPILE_TAG_CLASS(ShadowrunUnit, TAG_FOURCC_SHADOWRUN_UNIT)
+            COMPILE_TAG_CLASS(ShadowrunWeapon, TAG_FOURCC_SHADOWRUN_WEAPON)
+            COMPILE_TAG_CLASS(ShadowrunBuyMenu, TAG_FOURCC_SHADOWRUN_BUY_MENU)
+
             case TagFourCC::TAG_FOURCC_OBJECT:
             case TagFourCC::TAG_FOURCC_UNIT:
             case TagFourCC::TAG_FOURCC_SHADER:

@@ -754,6 +754,11 @@ namespace Invader::Parser {
             throw InvalidTagDataException();
         }
 
+        // Maps that have been through cache files (e.g. tool.exe output or tags extracted from
+        // a cache file) only retain compressed vertices, which leaves nothing to build geometry from.
+        // Regenerate the uncompressed set so these tags can be built without being pre-bludgeoned.
+        regenerate_missing_model_vertices(*this, true);
+
         pre_compile_model(*this, workload, tag_index);
     }
 
@@ -767,6 +772,9 @@ namespace Invader::Parser {
                 throw InvalidTagDataException();
             default: break;
         }
+
+        // See GBXModel::pre_compile: cache-only tags keep compressed vertices but lose the uncompressed set.
+        regenerate_missing_model_vertices(*this, true);
 
         pre_compile_model(*this, workload, tag_index);
     }

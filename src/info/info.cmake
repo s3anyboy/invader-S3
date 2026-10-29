@@ -1,6 +1,6 @@
 # SPDX-License-Identifier: GPL-3.0-only
 
-if(NOT DEFINED ${INVADER_INFO})
+if(NOT DEFINED INVADER_INFO)
     set(INVADER_INFO true CACHE BOOL "Build invader-info (displays metadata for cache files)")
 endif()
 

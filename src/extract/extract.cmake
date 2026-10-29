@@ -1,6 +1,6 @@
 # SPDX-License-Identifier: GPL-3.0-only
 
-if(NOT DEFINED ${INVADER_EXTRACT})
+if(NOT DEFINED INVADER_EXTRACT)
     set(INVADER_EXTRACT true CACHE BOOL "Build invader-extract (extracts data from cache files)")
 endif()
 

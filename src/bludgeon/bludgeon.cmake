@@ -1,6 +1,6 @@
 # SPDX-License-Identifier: GPL-3.0-only
 
-if(NOT DEFINED ${INVADER_BLUDGEON})
+if(NOT DEFINED INVADER_BLUDGEON)
     set(INVADER_BLUDGEON true CACHE BOOL "Build invader-bludgeon (convinces tags to work with Invader)")
 endif()
 

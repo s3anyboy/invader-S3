@@ -1,6 +1,6 @@
 # SPDX-License-Identifier: GPL-3.0-only
 
-if(NOT DEFINED ${INVADER_DEPENDENCY})
+if(NOT DEFINED INVADER_DEPENDENCY)
     set(INVADER_DEPENDENCY true CACHE BOOL "Build invader-dependency (finds dependencies of tags)")
 endif()
 

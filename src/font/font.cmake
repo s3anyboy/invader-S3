@@ -2,11 +2,11 @@
 
 # Check if we can build invader-font
 if(NOT ${FREETYPE_FOUND})
-    set(INVADER_FONT false)
+    set(INVADER_FONT false CACHE BOOL "" FORCE)
     message(WARNING "Unable to automatically find freetype; invader-font will be disabled")
 endif()
 
-if(NOT DEFINED ${INVADER_FONT})
+if(NOT DEFINED INVADER_FONT)
     set(INVADER_FONT ${INVADER_FONT} true CACHE BOOL "Build invader-font (requires freetype; makes font tags)")
 endif()
 

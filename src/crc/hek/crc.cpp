@@ -25,12 +25,8 @@ namespace Invader {
         }
 
         auto engine = map.get_cache_version();
+        // Xbox and Shadowrun caches don't carry a CRC32
         if(engine == HEK::CacheFileEngine::CACHE_FILE_XBOX) {
-            return 0;
-        }
-
-        // Shadowrun maps don't have a CRC32 at all
-        if(engine == HEK::CacheFileEngine::CACHE_FILE_SHADOWRUN) {
             if(check_dirty) {
                 *check_dirty = false;
             }

@@ -1,6 +1,6 @@
 # SPDX-License-Identifier: GPL-3.0-only
 
-if(NOT DEFINED ${INVADER_INDEX})
+if(NOT DEFINED INVADER_INDEX)
     set(INVADER_INDEX true CACHE BOOL "Build invader-index (indexes cache files)")
 endif()
 

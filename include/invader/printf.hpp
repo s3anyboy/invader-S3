@@ -12,7 +12,9 @@
 void set_up_color_term() noexcept;
 bool is_on_color_term() noexcept;
 
+#ifdef USES_NIX_COLORS
 #include <unistd.h>
+#endif
 #include <cstdlib>
 #include <cstring>
 #include <cstdio>

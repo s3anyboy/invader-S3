@@ -1,6 +1,6 @@
 # SPDX-License-Identifier: GPL-3.0-only
 
-if(NOT DEFINED ${INVADER_LIGHTMAP})
+if(NOT DEFINED INVADER_LIGHTMAP)
     set(INVADER_LIGHTMAP true CACHE BOOL "Build invader-lightmap (generate lightmaps)")
 endif()
 

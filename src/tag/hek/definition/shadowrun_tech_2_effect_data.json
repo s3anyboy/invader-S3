@@ -1,0 +1,385 @@
+[
+    {
+        "name": "t2ed_block_0088_1",
+        "fields": [
+            {
+                "type": "pad",
+                "size": 256
+            },
+            {
+                "name": "unknown int 0100",
+                "type": "int32"
+            },
+            {
+                "type": "pad",
+                "size": 252
+            }
+        ],
+        "type": "struct",
+        "size": 512
+    },
+    {
+        "name": "t2ed_block_0180_2",
+        "fields": [
+            {
+                "type": "pad",
+                "size": 256
+            },
+            {
+                "name": "unknown int 0100",
+                "type": "int32"
+            },
+            {
+                "type": "pad",
+                "size": 252
+            }
+        ],
+        "type": "struct",
+        "size": 512
+    },
+    {
+        "name": "t2ed_block_0298_3",
+        "fields": [
+            {
+                "type": "pad",
+                "size": 256
+            },
+            {
+                "name": "unknown int 0100",
+                "type": "int32"
+            },
+            {
+                "type": "pad",
+                "size": 252
+            }
+        ],
+        "type": "struct",
+        "size": 512
+    },
+    {
+        "name": "t2ed_block_0484_4",
+        "fields": [
+            {
+                "type": "pad",
+                "size": 256
+            },
+            {
+                "name": "unknown int 0100",
+                "type": "int32"
+            },
+            {
+                "type": "pad",
+                "size": 252
+            }
+        ],
+        "type": "struct",
+        "size": 512
+    },
+    {
+        "name": "t2ed_block_0604_5",
+        "fields": [
+            {
+                "type": "pad",
+                "size": 256
+            },
+            {
+                "name": "unknown int 0100",
+                "type": "int32"
+            },
+            {
+                "type": "pad",
+                "size": 252
+            }
+        ],
+        "type": "struct",
+        "size": 512
+    },
+    {
+        "name": "ShadowrunTech2EffectData",
+        "fields": [
+            {
+                "type": "pad",
+                "size": 132
+            },
+            {
+                "name": "unknown float 0084",
+                "type": "float"
+            },
+            {
+                "name": "block 0088",
+                "type": "TagReflexive",
+                "struct": "t2ed_block_0088_1"
+            },
+            {
+                "type": "pad",
+                "size": 236
+            },
+            {
+                "name": "block 0180",
+                "type": "TagReflexive",
+                "struct": "t2ed_block_0180_2"
+            },
+            {
+                "name": "reference 018c",
+                "type": "TagDependency",
+                "classes": [
+                    "projectile"
+                ]
+            },
+            {
+                "name": "reference 019c",
+                "type": "TagDependency",
+                "classes": [
+                    "scenery"
+                ]
+            },
+            {
+                "name": "unknown float 01ac",
+                "type": "float"
+            },
+            {
+                "name": "unknown float 01b0",
+                "type": "float"
+            },
+            {
+                "name": "unknown float 01b4",
+                "type": "float"
+            },
+            {
+                "name": "unknown float 01b8",
+                "type": "float"
+            },
+            {
+                "name": "unknown int 01bc",
+                "type": "int32"
+            },
+            {
+                "name": "reference 01c0",
+                "type": "TagDependency",
+                "classes": [
+                    "effect"
+                ]
+            },
+            {
+                "name": "reference 01d0",
+                "type": "TagDependency",
+                "classes": [
+                    "effect"
+                ]
+            },
+            {
+                "name": "reference 01e0",
+                "type": "TagDependency",
+                "classes": [
+                    "effect"
+                ]
+            },
+            {
+                "name": "reference 01f0",
+                "type": "TagDependency",
+                "classes": [
+                    "effect"
+                ]
+            },
+            {
+                "name": "reference 0200",
+                "type": "TagDependency",
+                "classes": [
+                    "effect"
+                ]
+            },
+            {
+                "name": "reference 0210",
+                "type": "TagDependency",
+                "classes": [
+                    "effect"
+                ]
+            },
+            {
+                "name": "reference 0220",
+                "type": "TagDependency",
+                "classes": [
+                    "effect"
+                ]
+            },
+            {
+                "name": "reference 0230",
+                "type": "TagDependency",
+                "classes": [
+                    "effect"
+                ]
+            },
+            {
+                "name": "reference 0240",
+                "type": "TagDependency",
+                "classes": [
+                    "effect"
+                ]
+            },
+            {
+                "name": "reference 0250",
+                "type": "TagDependency",
+                "classes": [
+                    "effect"
+                ]
+            },
+            {
+                "name": "reference 0260",
+                "type": "TagDependency",
+                "classes": [
+                    "effect"
+                ]
+            },
+            {
+                "type": "pad",
+                "size": 20
+            },
+            {
+                "name": "unknown float 0284",
+                "type": "float"
+            },
+            {
+                "name": "reference 0288",
+                "type": "TagDependency",
+                "classes": [
+                    "scenery"
+                ]
+            },
+            {
+                "name": "block 0298",
+                "type": "TagReflexive",
+                "struct": "t2ed_block_0298_3"
+            },
+            {
+                "type": "pad",
+                "size": 4
+            },
+            {
+                "name": "unknown float 02a8",
+                "type": "float"
+            },
+            {
+                "type": "pad",
+                "size": 212
+            },
+            {
+                "name": "unknown int 0380",
+                "type": "int32"
+            },
+            {
+                "name": "reference 0384",
+                "type": "TagDependency",
+                "classes": [
+                    "effect"
+                ]
+            },
+            {
+                "name": "reference 0394",
+                "type": "TagDependency",
+                "classes": [
+                    "effect"
+                ]
+            },
+            {
+                "name": "unknown float 03a4",
+                "type": "float"
+            },
+            {
+                "type": "pad",
+                "size": 4
+            },
+            {
+                "name": "unknown float 03ac",
+                "type": "float"
+            },
+            {
+                "type": "pad",
+                "size": 212
+            },
+            {
+                "name": "block 0484",
+                "type": "TagReflexive",
+                "struct": "t2ed_block_0484_4"
+            },
+            {
+                "type": "pad",
+                "size": 248
+            },
+            {
+                "name": "unknown float 0588",
+                "type": "float"
+            },
+            {
+                "name": "unknown short 058c",
+                "type": "int16"
+            },
+            {
+                "name": "unknown short 058e",
+                "type": "int16"
+            },
+            {
+                "name": "unknown int 0590",
+                "type": "int32"
+            },
+            {
+                "type": "pad",
+                "size": 24
+            },
+            {
+                "name": "unknown int 05ac",
+                "type": "int32"
+            },
+            {
+                "name": "unknown int 05b0",
+                "type": "int32"
+            },
+            {
+                "name": "reference 05b4",
+                "type": "TagDependency",
+                "classes": [
+                    "effect"
+                ]
+            },
+            {
+                "name": "reference 05c4",
+                "type": "TagDependency",
+                "classes": [
+                    "damage_effect"
+                ]
+            },
+            {
+                "name": "reference 05d4",
+                "type": "TagDependency",
+                "classes": [
+                    "projectile"
+                ]
+            },
+            {
+                "name": "reference 05e4",
+                "type": "TagDependency",
+                "classes": [
+                    "damage_effect"
+                ]
+            },
+            {
+                "name": "reference 05f4",
+                "type": "TagDependency",
+                "classes": [
+                    "effect"
+                ]
+            },
+            {
+                "name": "block 0604",
+                "type": "TagReflexive",
+                "struct": "t2ed_block_0604_5"
+            },
+            {
+                "type": "pad",
+                "size": 496
+            }
+        ],
+        "type": "struct",
+        "size": 2048,
+        "class": "shadowrun_tech_2_effect_data"
+    }
+]

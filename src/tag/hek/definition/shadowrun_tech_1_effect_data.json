@@ -1,0 +1,315 @@
+[
+    {
+        "name": "t1ed_block_0188_1",
+        "fields": [
+            {
+                "type": "pad",
+                "size": 256
+            },
+            {
+                "name": "unknown int 0100",
+                "type": "int32"
+            },
+            {
+                "type": "pad",
+                "size": 252
+            }
+        ],
+        "type": "struct",
+        "size": 512
+    },
+    {
+        "name": "t1ed_block_0290_2",
+        "fields": [
+            {
+                "type": "pad",
+                "size": 256
+            },
+            {
+                "name": "unknown int 0100",
+                "type": "int32"
+            },
+            {
+                "type": "pad",
+                "size": 252
+            }
+        ],
+        "type": "struct",
+        "size": 512
+    },
+    {
+        "name": "t1ed_block_0484_3",
+        "fields": [
+            {
+                "type": "pad",
+                "size": 256
+            },
+            {
+                "name": "unknown int 0100",
+                "type": "int32"
+            },
+            {
+                "type": "pad",
+                "size": 252
+            }
+        ],
+        "type": "struct",
+        "size": 512
+    },
+    {
+        "name": "t1ed_block_0584_4",
+        "fields": [
+            {
+                "type": "pad",
+                "size": 256
+            },
+            {
+                "name": "unknown int 0100",
+                "type": "int32"
+            },
+            {
+                "type": "pad",
+                "size": 252
+            }
+        ],
+        "type": "struct",
+        "size": 512
+    },
+    {
+        "name": "ShadowrunTech1EffectData",
+        "fields": [
+            {
+                "type": "pad",
+                "size": 128
+            },
+            {
+                "name": "unknown int 0080",
+                "type": "int32"
+            },
+            {
+                "name": "unknown int 0084",
+                "type": "int32"
+            },
+            {
+                "type": "pad",
+                "size": 8
+            },
+            {
+                "name": "reference 0090",
+                "type": "TagDependency",
+                "classes": [
+                    "effect"
+                ]
+            },
+            {
+                "name": "reference 00a0",
+                "type": "TagDependency",
+                "classes": [
+                    "damage_effect"
+                ]
+            },
+            {
+                "name": "reference 00b0",
+                "type": "TagDependency",
+                "classes": [
+                    "effect"
+                ]
+            },
+            {
+                "name": "reference 00c0",
+                "type": "TagDependency",
+                "classes": [
+                    "damage_effect"
+                ]
+            },
+            {
+                "name": "reference 00d0",
+                "type": "TagDependency",
+                "classes": [
+                    "effect"
+                ]
+            },
+            {
+                "name": "reference 00e0",
+                "type": "TagDependency",
+                "classes": [
+                    "damage_effect"
+                ]
+            },
+            {
+                "type": "pad",
+                "size": 144
+            },
+            {
+                "name": "unknown float 0180",
+                "type": "float"
+            },
+            {
+                "name": "unknown float 0184",
+                "type": "float"
+            },
+            {
+                "name": "block 0188",
+                "type": "TagReflexive",
+                "struct": "t1ed_block_0188_1"
+            },
+            {
+                "name": "unknown float 0194",
+                "type": "float"
+            },
+            {
+                "name": "unknown float 0198",
+                "type": "float"
+            },
+            {
+                "name": "unknown float 019c",
+                "type": "float"
+            },
+            {
+                "name": "reference 01a0",
+                "type": "TagDependency",
+                "classes": [
+                    "effect"
+                ]
+            },
+            {
+                "name": "reference 01b0",
+                "type": "TagDependency",
+                "classes": [
+                    "damage_effect"
+                ]
+            },
+            {
+                "name": "reference 01c0",
+                "type": "TagDependency",
+                "classes": [
+                    "effect"
+                ]
+            },
+            {
+                "name": "reference 01d0",
+                "type": "TagDependency",
+                "classes": [
+                    "damage_effect"
+                ]
+            },
+            {
+                "name": "unknown float 01e0",
+                "type": "float"
+            },
+            {
+                "type": "pad",
+                "size": 160
+            },
+            {
+                "name": "unknown float 0284",
+                "type": "float"
+            },
+            {
+                "name": "unknown float 0288",
+                "type": "float"
+            },
+            {
+                "name": "unknown float 028c",
+                "type": "float"
+            },
+            {
+                "name": "block 0290",
+                "type": "TagReflexive",
+                "struct": "t1ed_block_0290_2"
+            },
+            {
+                "name": "reference 029c",
+                "type": "TagDependency",
+                "classes": [
+                    "projectile"
+                ]
+            },
+            {
+                "type": "pad",
+                "size": 472
+            },
+            {
+                "name": "block 0484",
+                "type": "TagReflexive",
+                "struct": "t1ed_block_0484_3"
+            },
+            {
+                "type": "pad",
+                "size": 244
+            },
+            {
+                "name": "block 0584",
+                "type": "TagReflexive",
+                "struct": "t1ed_block_0584_4"
+            },
+            {
+                "name": "unknown short 0590",
+                "type": "int16"
+            },
+            {
+                "name": "unknown short 0592",
+                "type": "int16"
+            },
+            {
+                "name": "unknown short 0594",
+                "type": "int16"
+            },
+            {
+                "name": "unknown short 0596",
+                "type": "int16"
+            },
+            {
+                "type": "pad",
+                "size": 24
+            },
+            {
+                "name": "unknown float 05b0",
+                "type": "float"
+            },
+            {
+                "name": "unknown float 05b4",
+                "type": "float"
+            },
+            {
+                "name": "unknown float 05b8",
+                "type": "float"
+            },
+            {
+                "name": "unknown float 05bc",
+                "type": "float"
+            },
+            {
+                "name": "unknown float 05c0",
+                "type": "float"
+            },
+            {
+                "name": "unknown float 05c4",
+                "type": "float"
+            },
+            {
+                "name": "unknown float 05c8",
+                "type": "float"
+            },
+            {
+                "name": "unknown int 05cc",
+                "type": "int32"
+            },
+            {
+                "name": "unknown float 05d0",
+                "type": "float"
+            },
+            {
+                "name": "unknown float 05d4",
+                "type": "float"
+            },
+            {
+                "type": "pad",
+                "size": 552
+            }
+        ],
+        "type": "struct",
+        "size": 2048,
+        "class": "shadowrun_tech_1_effect_data"
+    }
+]

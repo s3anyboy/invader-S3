@@ -1,6 +1,6 @@
 # SPDX-License-Identifier: GPL-3.0-only
 
-if(NOT DEFINED ${INVADER_SCRIPT})
+if(NOT DEFINED INVADER_SCRIPT)
     set(INVADER_SCRIPT true CACHE BOOL "Build invader-script (compiles .hsc scripts)")
 endif()
 

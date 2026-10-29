@@ -1,6 +1,6 @@
 # SPDX-License-Identifier: GPL-3.0-only
 
-if(NOT DEFINED ${INVADER_CRC})
+if(NOT DEFINED INVADER_CRC)
     set(INVADER_CRC true CACHE BOOL "Build invader-crc (Inspect or forge the CRC32 of a cache file)")
 endif()
 

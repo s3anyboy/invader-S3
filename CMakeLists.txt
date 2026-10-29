@@ -17,7 +17,15 @@ set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_C_STANDARD 11)
 
 # Build shared libs?
-option(BUILD_SHARED_LIBS "Build with shared libs" ON)
+option(BUILD_SHARED_LIBS "Build with shared libs" OFF)
+
+# The core library has no explicit dllexport annotations, so when building it as a DLL on Windows
+# every symbol has to be exported automatically and none of the tools could link otherwise. That
+# machine-generated export list hits the 65535 object limit in link.exe, so Windows defaults to a
+# static library; pass -DBUILD_SHARED_LIBS=ON to override.
+if(WIN32 AND BUILD_SHARED_LIBS)
+    set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS ON)
+endif()
 
 # Add our dependencies
 include(dependencies.cmake)
@@ -46,6 +54,23 @@ if(CMAKE_CXX_COMPILER_ID MATCHES "GNU" OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -Wpedantic -Wold-style-cast -Wno-missing-braces")
     set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -O3")
     set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -g -march=native")
+endif()
+
+# Generated parser files are large enough to exceed MSVC's default object file section limit
+if(MSVC)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /bigobj")
+endif()
+
+# windows.h defines min/max as macros unless NOMINMAX is set, which breaks std::min/std::max
+if(WIN32)
+    add_definitions(-DNOMINMAX -DWIN32_LEAN_AND_MEAN)
+endif()
+
+# windows.rc embeds res/invader.manifest itself. MSVC still generates and embeds its own manifest
+# with the same ID by default, which the resource converter rejects as a duplicate resource.
+if(MSVC)
+    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} /MANIFEST:NO")
+    set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} /MANIFEST:NO")
 endif()
 
 if(MINGW)

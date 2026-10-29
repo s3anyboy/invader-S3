@@ -1,6 +1,6 @@
 # SPDX-License-Identifier: GPL-3.0-only
 
-if(NOT DEFINED ${INVADER_EDIT})
+if(NOT DEFINED INVADER_EDIT)
     set(INVADER_EDIT true CACHE BOOL "Build invader-edit (edits tags)")
 endif()
 

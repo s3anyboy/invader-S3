@@ -10,6 +10,7 @@ def make_definitions(f, ecpp, bcpp, all_enums, all_bitfields, all_structs_arrang
 
     ecpp.write("// SPDX-License-Identifier: GPL-3.0-only\n\n// This file was auto-generated.\n// If you want to edit this, edit the .json definitions and rerun the generator script, instead.\n\n")
     ecpp.write("#include <cstring>\n")
+    ecpp.write("#include <utility>\n")
     ecpp.write("#include <invader/printf.hpp>\n")
     ecpp.write("#include <invader/tag/hek/definition.hpp>\n\n")
     ecpp.write("namespace Invader::HEK {\n")
@@ -79,14 +80,19 @@ def make_definitions(f, ecpp, bcpp, all_enums, all_bitfields, all_structs_arrang
         f.write("     * @return      value of the enum\n")
         f.write("     */\n")
         f.write("    {} {}_from_string(const char *value);\n".format(name, name))
+        # Use a lookup table rather than an if/else chain. Some enums (e.g. UIEventHandlerReferenceFunction)
+        # have well over a hundred values, which exceeds compiler nesting limits for a single if/else chain.
         cpp.write("    {} {}_from_string(const char *value) {{\n".format(name, name))
-        for n in range(0,len(fields)):
-            cpp.write("        {}if(std::strcmp(value, \"{}\") == 0) {{\n".format("" if n == 0 else "else ", format_enum_str(fields[n])))
-            cpp.write("             return {}::{};\n".format(name, format_enum(prefix, fields[n])))
-            cpp.write("        }\n")
-        cpp.write("        else {\n")
-        cpp.write("            throw std::exception();\n")
+        cpp.write("        static const std::pair<const char *, {}> enum_values[] = {{\n".format(name))
+        for n in range(0, len(fields)):
+            cpp.write("            {{ \"{}\", {}::{} }},\n".format(format_enum_str(fields[n]), name, format_enum(prefix, fields[n])))
+        cpp.write("        " + "};\n")
+        cpp.write("        for(auto &enum_value : enum_values) {\n")
+        cpp.write("            if(std::strcmp(value, enum_value.first) == 0) {\n")
+        cpp.write("                return enum_value.second;\n")
+        cpp.write("            }\n")
         cpp.write("        }\n")
+        cpp.write("        throw std::exception();\n")
         cpp.write("    }\n")
         f.write("\n")
 

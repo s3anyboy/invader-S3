@@ -404,6 +404,19 @@ namespace Invader {
             EXTRACT_TAG_GROUP(Wind, TAG_FOURCC_WIND)
             EXTRACT_TAG_GROUP(WeaponHUDInterface, TAG_FOURCC_WEAPON_HUD_INTERFACE)
 
+            // Shadowrun prototype classes. Their layouts come from structural analysis of the
+            // prototype cache file, so they are byte-for-byte best effort.
+            EXTRACT_TAG_GROUP(ShadowrunWeapon, TAG_FOURCC_SHADOWRUN_WEAPON)
+            EXTRACT_TAG_GROUP(ShadowrunUnit, TAG_FOURCC_SHADOWRUN_UNIT)
+            EXTRACT_TAG_GROUP(ShadowrunActor, TAG_FOURCC_SHADOWRUN_ACTOR)
+            EXTRACT_TAG_GROUP(ShadowrunMagic1EffectData, TAG_FOURCC_SHADOWRUN_MAGIC_1_EFFECT_DATA)
+            EXTRACT_TAG_GROUP(ShadowrunMagic2EffectData, TAG_FOURCC_SHADOWRUN_MAGIC_2_EFFECT_DATA)
+            EXTRACT_TAG_GROUP(ShadowrunMagic3EffectData, TAG_FOURCC_SHADOWRUN_MAGIC_3_EFFECT_DATA)
+            EXTRACT_TAG_GROUP(ShadowrunTech1EffectData, TAG_FOURCC_SHADOWRUN_TECH_1_EFFECT_DATA)
+            EXTRACT_TAG_GROUP(ShadowrunTech2EffectData, TAG_FOURCC_SHADOWRUN_TECH_2_EFFECT_DATA)
+            EXTRACT_TAG_GROUP(ShadowrunTech3EffectData, TAG_FOURCC_SHADOWRUN_TECH_3_EFFECT_DATA)
+            EXTRACT_TAG_GROUP(ShadowrunBuyMenu, TAG_FOURCC_SHADOWRUN_BUY_MENU)
+
             case TagFourCC::TAG_FOURCC_SCENARIO_STRUCTURE_BSP: {
                 if(tag.get_map().get_cache_version() == HEK::CacheFileEngine::CACHE_FILE_NATIVE) {
                     return std::make_unique<Parser::ScenarioStructureBSP>(Parser::ScenarioStructureBSP::parse_cache_file_data(tag));

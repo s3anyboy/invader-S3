@@ -1,3 +1,4 @@
 *.kdev*
 *.kate*
 *exclude*
+build*

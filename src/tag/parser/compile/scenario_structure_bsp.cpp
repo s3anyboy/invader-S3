@@ -457,12 +457,10 @@ namespace Invader::Parser {
             const std::byte *lightmap_vertices_start = bsp_vertices_start + material.rendered_vertices_count * sizeof(rendered_type_from::struct_little); \
             const auto *bsp_vertices = reinterpret_cast<const rendered_type_from::struct_little *>(bsp_vertices_start); \
      \
+            /* Insert at the end and take the address of the first new element (iterator::base() is not portable) */ \
+            material.to.resize(material.to.size() + material.rendered_vertices_count * sizeof(rendered_type_to::struct_little)); \
             auto *new_bsp_vertices = reinterpret_cast<rendered_type_to::struct_little *>( \
-                material.to.insert( \
-                    material.to.end(), \
-                    material.rendered_vertices_count * sizeof(rendered_type_to::struct_little), \
-                    std::byte() \
-                ).base() \
+                material.to.data() + material.to.size() - material.rendered_vertices_count * sizeof(rendered_type_to::struct_little) \
             ); \
             for(std::size_t v = 0; v < material.rendered_vertices_count; v++) { \
                 new_bsp_vertices[v] = convert_rendered(bsp_vertices[v]); \
@@ -473,12 +471,9 @@ namespace Invader::Parser {
                 const auto *bsp_lightmap_vertices = reinterpret_cast<const lightmap_type_from::struct_little *>(lightmap_vertices_start); \
      \
                 /* Decompress them as well */ \
+                material.to.resize(material.to.size() + material.lightmap_vertices_count * sizeof(lightmap_type_to::struct_little)); \
                 auto *new_bsp_lightmap_vertices = reinterpret_cast<lightmap_type_to::struct_little *>( \
-                    material.to.insert( \
-                        material.to.end(), \
-                        material.lightmap_vertices_count * sizeof(lightmap_type_to::struct_little), \
-                        std::byte() \
-                    ).base() \
+                    material.to.data() + material.to.size() - material.lightmap_vertices_count * sizeof(lightmap_type_to::struct_little) \
                 ); \
                 for(std::size_t v = 0; v < material.lightmap_vertices_count; v++) { \
                     new_bsp_lightmap_vertices[v] = convert_lightmap(bsp_lightmap_vertices[v]); \

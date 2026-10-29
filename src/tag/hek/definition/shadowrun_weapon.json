@@ -1,0 +1,179 @@
+[
+    {
+        "name": "srwd_block_0500_1",
+        "fields": [
+            {
+                "type": "pad",
+                "size": 256
+            },
+            {
+                "name": "unknown float 0100",
+                "type": "float"
+            },
+            {
+                "name": "unknown float 0104",
+                "type": "float"
+            },
+            {
+                "type": "pad",
+                "size": 1272
+            }
+        ],
+        "type": "struct",
+        "size": 1536
+    },
+    {
+        "name": "ShadowrunWeapon",
+        "fields": [
+            {
+                "type": "pad",
+                "size": 252
+            },
+            {
+                "name": "unknown int 00fc",
+                "type": "int32"
+            },
+            {
+                "name": "unknown float 0100",
+                "type": "float"
+            },
+            {
+                "name": "unknown float 0104",
+                "type": "float"
+            },
+            {
+                "type": "pad",
+                "size": 4
+            },
+            {
+                "name": "unknown float 010c",
+                "type": "float"
+            },
+            {
+                "type": "pad",
+                "size": 4
+            },
+            {
+                "name": "unknown float 0114",
+                "type": "float"
+            },
+            {
+                "name": "unknown float 0118",
+                "type": "float"
+            },
+            {
+                "type": "pad",
+                "size": 4
+            },
+            {
+                "name": "unknown float 0120",
+                "type": "float"
+            },
+            {
+                "name": "unknown float 0124",
+                "type": "float"
+            },
+            {
+                "type": "pad",
+                "size": 56
+            },
+            {
+                "name": "unknown float 0160",
+                "type": "float"
+            },
+            {
+                "name": "unknown float 0164",
+                "type": "float"
+            },
+            {
+                "name": "unknown float 0168",
+                "type": "float"
+            },
+            {
+                "name": "unknown float 016c",
+                "type": "float"
+            },
+            {
+                "name": "unknown float 0170",
+                "type": "float"
+            },
+            {
+                "type": "pad",
+                "size": 12
+            },
+            {
+                "name": "unknown float 0180",
+                "type": "float"
+            },
+            {
+                "name": "unknown float 0184",
+                "type": "float"
+            },
+            {
+                "name": "unknown float 0188",
+                "type": "float"
+            },
+            {
+                "name": "unknown float 018c",
+                "type": "float"
+            },
+            {
+                "name": "unknown float 0190",
+                "type": "float"
+            },
+            {
+                "type": "pad",
+                "size": 108
+            },
+            {
+                "name": "reference 0200",
+                "type": "TagDependency",
+                "classes": [
+                    "damage_effect"
+                ]
+            },
+            {
+                "name": "reference 0210",
+                "type": "TagDependency",
+                "classes": [
+                    "damage_effect"
+                ]
+            },
+            {
+                "type": "pad",
+                "size": 224
+            },
+            {
+                "name": "unknown int 0300",
+                "type": "int32"
+            },
+            {
+                "name": "unknown int 0304",
+                "type": "int32"
+            },
+            {
+                "type": "pad",
+                "size": 504
+            },
+            {
+                "name": "block 0500",
+                "type": "TagReflexive",
+                "struct": "srwd_block_0500_1"
+            },
+            {
+                "name": "reference 050c",
+                "type": "TagDependency",
+                "classes": [
+                    "shadowrun_weapon"
+                ]
+            },
+            {
+                "type": "pad",
+                "size": 228
+            }
+        ],
+        "type": "struct",
+        "size": 1536,
+        "class": "shadowrun_weapon"
+    }
+]

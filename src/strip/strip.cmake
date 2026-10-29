@@ -1,6 +1,6 @@
 # SPDX-License-Identifier: GPL-3.0-only
 
-if(NOT DEFINED ${INVADER_STRIP})
+if(NOT DEFINED INVADER_STRIP)
     set(INVADER_STRIP true CACHE BOOL "Build invader-strip (strips hidden values from tags)")
 endif()
 

@@ -242,8 +242,20 @@ add_custom_command(
     DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/src/resource/list/generator.py" "${CMAKE_CURRENT_SOURCE_DIR}/src/resource/list/bitmaps.tag_indices" "${CMAKE_CURRENT_SOURCE_DIR}/src/resource/list/sounds.tag_indices" "${CMAKE_CURRENT_SOURCE_DIR}/src/resource/list/loc.tag_indices"
 )
 
-# Remove warnings from this
-set_source_files_properties(src/bitmap/stb/stb_impl.c PROPERTIES COMPILE_FLAGS -Wno-unused-function)
+# windows.rc embeds res/invader.manifest itself, so stop MSVC from adding a second manifest resource
+if(MSVC)
+    foreach(_target ${TARGETS_LIST})
+        get_target_property(_sources ${_target} SOURCES)
+        if(_sources MATCHES "\.rc$")
+            target_link_options(${_target} PRIVATE /MANIFEST:NO)
+        endif()
+    endforeach()
+endif()
+
+# Remove warnings from this (GCC/Clang only; MSVC has no equivalent flag and rejects unknown ones)
+if(CMAKE_C_COMPILER_ID MATCHES "GNU" OR CMAKE_C_COMPILER_ID MATCHES "Clang")
+    set_source_files_properties(src/bitmap/stb/stb_impl.c PROPERTIES COMPILE_FLAGS -Wno-unused-function)
+endif()
 
 # Include that
 include_directories(${CMAKE_CURRENT_BINARY_DIR} ${ZLIB_INCLUDE_DIRS} ext/riat/riatc/include)

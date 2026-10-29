@@ -1,11 +1,11 @@
 # SPDX-License-Identifier: GPL-3.0-only
 
 if(NOT ${LibArchive_FOUND})
-    set(INVADER_ARCHIVE false)
+    set(INVADER_ARCHIVE false CACHE BOOL "" FORCE)
     message(WARNING "Unable to automatically find libarchive; invader-archive will be disabled")
 endif()
 
-if(NOT DEFINED ${INVADER_ARCHIVE})
+if(NOT DEFINED INVADER_ARCHIVE)
     set(INVADER_ARCHIVE true CACHE BOOL "Build invader-archive (archives tags; requires libarchive)")
 endif()
 

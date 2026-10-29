@@ -1,6 +1,6 @@
 # SPDX-License-Identifier: GPL-3.0-only
 
-if(NOT DEFINED ${INVADER_BUILD})
+if(NOT DEFINED INVADER_BUILD)
     set(INVADER_BUILD true CACHE BOOL "Build invader-build (builds cache files)")
 endif()
 

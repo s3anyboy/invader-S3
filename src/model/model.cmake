@@ -1,6 +1,6 @@
 # SPDX-License-Identifier: GPL-3.0-only
 
-if(NOT DEFINED ${INVADER_MODEL})
+if(NOT DEFINED INVADER_MODEL)
     set(INVADER_MODEL true CACHE BOOL "Build invader-model (creates model tags)")
 endif()
 

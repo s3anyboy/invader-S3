@@ -2,11 +2,11 @@
 
 # Check if we can build invader-bitmap
 if(NOT ${TIFF_FOUND})
-    set(INVADER_BITMAP false)
+    set(INVADER_BITMAP false CACHE BOOL "" FORCE)
     message(WARNING "Unable to automatically find libtiff; invader-bitmap will be disabled")
 endif()
 
-if(NOT DEFINED ${INVADER_BITMAP})
+if(NOT DEFINED INVADER_BITMAP)
     set(INVADER_BITMAP true CACHE BOOL "Build invader-bitmap (creates bitmap tags)")
 endif()
 

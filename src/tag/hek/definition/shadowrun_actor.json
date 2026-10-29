@@ -1,0 +1,319 @@
+[
+    {
+        "name": "ShadowrunActor",
+        "fields": [
+            {
+                "name": "unknown int 0000",
+                "type": "int32"
+            },
+            {
+                "name": "unknown float 0004",
+                "type": "float"
+            },
+            {
+                "name": "unknown float 0008",
+                "type": "float"
+            },
+            {
+                "name": "unknown float 000c",
+                "type": "float"
+            },
+            {
+                "name": "unknown float 0010",
+                "type": "float"
+            },
+            {
+                "name": "unknown float 0014",
+                "type": "float"
+            },
+            {
+                "name": "unknown float 0018",
+                "type": "float"
+            },
+            {
+                "name": "unknown float 001c",
+                "type": "float"
+            },
+            {
+                "name": "unknown float 0020",
+                "type": "float"
+            },
+            {
+                "name": "unknown float 0024",
+                "type": "float"
+            },
+            {
+                "type": "pad",
+                "size": 8
+            },
+            {
+                "name": "unknown float 0030",
+                "type": "float"
+            },
+            {
+                "type": "pad",
+                "size": 4
+            },
+            {
+                "name": "unknown float 0038",
+                "type": "float"
+            },
+            {
+                "name": "unknown float 003c",
+                "type": "float"
+            },
+            {
+                "type": "pad",
+                "size": 20
+            },
+            {
+                "name": "unknown float 0054",
+                "type": "float"
+            },
+            {
+                "type": "pad",
+                "size": 12
+            },
+            {
+                "name": "unknown float 0064",
+                "type": "float"
+            },
+            {
+                "name": "unknown float 0068",
+                "type": "float"
+            },
+            {
+                "type": "pad",
+                "size": 408
+            },
+            {
+                "name": "unknown float 0204",
+                "type": "float"
+            },
+            {
+                "name": "unknown int 0208",
+                "type": "int32"
+            },
+            {
+                "name": "unknown float 020c",
+                "type": "float"
+            },
+            {
+                "name": "unknown float 0210",
+                "type": "float"
+            },
+            {
+                "name": "unknown int 0214",
+                "type": "int32"
+            },
+            {
+                "name": "unknown float 0218",
+                "type": "float"
+            },
+            {
+                "name": "unknown float 021c",
+                "type": "float"
+            },
+            {
+                "name": "unknown float 0220",
+                "type": "float"
+            },
+            {
+                "type": "pad",
+                "size": 12
+            },
+            {
+                "name": "unknown float 0230",
+                "type": "float"
+            },
+            {
+                "name": "unknown float 0234",
+                "type": "float"
+            },
+            {
+                "name": "unknown int 0238",
+                "type": "int32"
+            },
+            {
+                "type": "pad",
+                "size": 456
+            },
+            {
+                "name": "unknown float 0404",
+                "type": "float"
+            },
+            {
+                "name": "unknown float 0408",
+                "type": "float"
+            },
+            {
+                "type": "pad",
+                "size": 24
+            },
+            {
+                "name": "unknown float 0424",
+                "type": "float"
+            },
+            {
+                "type": "pad",
+                "size": 984
+            },
+            {
+                "name": "unknown int 0800",
+                "type": "int32"
+            },
+            {
+                "name": "unknown float 0804",
+                "type": "float"
+            },
+            {
+                "name": "unknown float 0808",
+                "type": "float"
+            },
+            {
+                "name": "unknown float 080c",
+                "type": "float"
+            },
+            {
+                "name": "unknown float 0810",
+                "type": "float"
+            },
+            {
+                "name": "unknown float 0814",
+                "type": "float"
+            },
+            {
+                "name": "reference 0818",
+                "type": "TagDependency",
+                "classes": [
+                    "actor_variant"
+                ]
+            },
+            {
+                "type": "pad",
+                "size": 996
+            },
+            {
+                "name": "unknown float 0c0c",
+                "type": "float"
+            },
+            {
+                "name": "unknown float 0c10",
+                "type": "float"
+            },
+            {
+                "name": "unknown float 0c14",
+                "type": "float"
+            },
+            {
+                "type": "pad",
+                "size": 8
+            },
+            {
+                "name": "unknown float 0c20",
+                "type": "float"
+            },
+            {
+                "type": "pad",
+                "size": 8
+            },
+            {
+                "name": "unknown float 0c2c",
+                "type": "float"
+            },
+            {
+                "type": "pad",
+                "size": 976
+            },
+            {
+                "name": "unknown int 1000",
+                "type": "int32"
+            },
+            {
+                "name": "reference 1004",
+                "type": "TagDependency",
+                "classes": [
+                    "scenery"
+                ]
+            },
+            {
+                "name": "reference 1014",
+                "type": "TagDependency",
+                "classes": [
+                    "effect"
+                ]
+            },
+            {
+                "type": "pad",
+                "size": 220
+            },
+            {
+                "name": "unknown int 1100",
+                "type": "int32"
+            },
+            {
+                "name": "unknown float 1104",
+                "type": "float"
+            },
+            {
+                "name": "unknown float 1108",
+                "type": "float"
+            },
+            {
+                "name": "unknown float 110c",
+                "type": "float"
+            },
+            {
+                "type": "pad",
+                "size": 244
+            },
+            {
+                "name": "unknown float 1204",
+                "type": "float"
+            },
+            {
+                "type": "pad",
+                "size": 4
+            },
+            {
+                "name": "unknown float 120c",
+                "type": "float"
+            },
+            {
+                "type": "pad",
+                "size": 12
+            },
+            {
+                "name": "unknown float 121c",
+                "type": "float"
+            },
+            {
+                "type": "pad",
+                "size": 4
+            },
+            {
+                "name": "unknown float 1224",
+                "type": "float"
+            },
+            {
+                "type": "pad",
+                "size": 8
+            },
+            {
+                "name": "unknown float 1230",
+                "type": "float"
+            },
+            {
+                "name": "unknown float 1234",
+                "type": "float"
+            },
+            {
+                "type": "pad",
+                "size": 456
+            }
+        ],
+        "type": "struct",
+        "size": 5120,
+        "class": "shadowrun_actor"
+    }
+]

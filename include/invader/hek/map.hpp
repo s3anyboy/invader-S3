@@ -16,22 +16,16 @@ namespace Invader::HEK {
         CACHE_FILE_RETAIL = 7,
         CACHE_FILE_CUSTOM_EDITION = 609,
         CACHE_FILE_MCC_CEA = 13,
-        CACHE_FILE_SHADOWRUN = 0x5A6D,
+
+        // Shadowrun prototype caches reuse the Xbox engine value. They are told apart by their build       
+        // string (see the Shadowrun entry in engine_infos), not by the engine field.          
+        CACHE_FILE_SHADOWRUN = 5,
         
         CACHE_FILE_NATIVE = 0x1A86
     };
     
     using CacheFileType = ScenarioType;
     const char *type_name(CacheFileType type) noexcept;
-
-    /**
-     * Check if the cache version belongs to a Shadowrun map
-     * @param engine cache version
-     * @return       true if the cache version is Shadowrun
-     */
-    static inline bool is_shadowrun_cache(CacheFileEngine engine) noexcept {
-        return engine == CACHE_FILE_SHADOWRUN;
-    }
     
     enum GameEngine {
         GAME_ENGINE_NATIVE,
@@ -258,34 +252,6 @@ namespace Invader::HEK {
         CACHE_FILE_HEADER_CEA_FLAGS_CLASSIC_ONLY = 0b100
     };
 
-    struct ShadowrunCacheFileHeader {
-        constexpr const static bool IS_DEMO = false;
-        
-        LittleEndian<CacheFileLiteral> head_literal;
-        LittleEndian<CacheFileEngine> engine;
-        LittleEndian<std::uint32_t> compressed_padding;
-        LittleEndian<std::uint32_t> tag_data_offset;
-        LittleEndian<std::uint32_t> tag_data_size;
-        PAD(0xC);
-        TagString name;
-        TagString build;
-        LittleEndian<CacheFileType> map_type;
-        PAD(0x792);
-        PAD(0x8);
-        LittleEndian<CacheFileLiteral> foot_literal;
-
-        bool valid() const noexcept {
-            return reinterpret_cast<const CacheFileHeader *>(this)->valid();
-        };
-    };
-    static_assert(offsetof(ShadowrunCacheFileHeader, tag_data_offset) == 0xC);
-    static_assert(offsetof(ShadowrunCacheFileHeader, tag_data_size) == 0x10);
-    static_assert(offsetof(ShadowrunCacheFileHeader, name) == 0x20);
-    static_assert(offsetof(ShadowrunCacheFileHeader, build) == 0x40);
-    static_assert(offsetof(ShadowrunCacheFileHeader, map_type) == 0x60);
-    static_assert(offsetof(ShadowrunCacheFileHeader, foot_literal) == 0x7FC);
-    static_assert(sizeof(ShadowrunCacheFileHeader) == 0x800);
-
     struct CacheFileHeaderCEA {
         LittleEndian<CacheFileLiteral> head_literal;
         LittleEndian<CacheFileEngine> engine;
@@ -360,13 +326,8 @@ namespace Invader::HEK {
     };
     static_assert(sizeof(CacheFileDemoHeader) == sizeof(CacheFileHeader));
 
-    // Shadowrun maps store their tag array at the end of the tag data. The header is just a pointer to it and the
-    // scenario tag index. The model info is not stored in the cache file at all; it's loaded from the SRBank file.
-    struct ShadowrunCacheFileTagDataHeader {
-        LittleEndian<Pointer> tag_array_address;
-        LittleEndian<std::uint32_t> scenario_tag_index;
-    };
-    static_assert(sizeof(ShadowrunCacheFileTagDataHeader) == 0x8);
+    // Shadowrun prototype maps use the regular Xbox tag data header (CacheFileTagDataHeaderXbox) and the
+    // normal tag array pointed to by tag_array_address. There is no special tag data header layout.
 
     struct CacheFileTagDataHeader {
         LittleEndian<Pointer> tag_array_address;
@@ -440,5 +401,7 @@ namespace Invader::HEK {
         LittleEndian<Pointer64> tag_data;
     };
     static_assert(sizeof(NativeCacheFileTagDataTag) == 0x20);
+
+
 }
 #endif

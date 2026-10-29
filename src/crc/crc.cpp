@@ -148,7 +148,7 @@ int main(int argc, const char **argv) {
         header_crc = demo_header.crc32.read();
     }
 
-    if(cache_version == HEK::CACHE_FILE_XBOX || cache_version == HEK::CACHE_FILE_SHADOWRUN) {
+    if(cache_version == HEK::CACHE_FILE_XBOX) {
         eprintf_error("%s is an Xbox cache file and not supported by invader-crc.", file);
         return EXIT_FAILURE;
     }

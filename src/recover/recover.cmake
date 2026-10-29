@@ -1,11 +1,11 @@
 # SPDX-License-Identifier: GPL-3.0-only
 
 if(NOT ${TIFF_FOUND})
-    set(INVADER_RECOVER false)
+    set(INVADER_RECOVER false CACHE BOOL "" FORCE)
     message(WARNING "Unable to automatically find libtiff; invader-recover will be disabled")
 endif()
 
-if(NOT DEFINED ${INVADER_RECOVER})
+if(NOT DEFINED INVADER_RECOVER)
     set(INVADER_RECOVER true CACHE BOOL "Build invader-recover (recovers source data from tags)")
 endif()
 

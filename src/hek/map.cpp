@@ -128,8 +128,9 @@ namespace Invader::HEK {
             .shorthand = "shadowrun",
             .engine = GameEngine::GAME_ENGINE_SHADOWRUN,
             .cache_version = CacheFileEngine::CACHE_FILE_SHADOWRUN,
-            .build_string = "",
-            .build_string_is_enforced = false,
+            // Shadowrun caches share the Xbox engine value, so they are identified by their build string
+            .build_string = "01.12.07.0132",
+            .build_string_is_enforced = true,
             .base_memory_address = SHADOWRUN_BASE_MEMORY_ADDRESS,
             .base_memory_address_is_inferred = true,
             .tag_space_length = SHADOWRUN_TAG_SPACE_LENGTH,
