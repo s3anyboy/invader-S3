@@ -190,8 +190,15 @@ def make_cache_format_data(struct_name, s, pre_compile, post_compile, all_used_s
                     cpp_cache_format_data.write("                if(s) {\n")
                     cpp_cache_format_data.write("                    auto count = s->{}.size();\n".format(member_to_check))
                     cpp_cache_format_data.write("                    if(this->{} >= count) {{\n".format(name))
-                    cpp_cache_format_data.write("                        REPORT_ERROR_PRINTF(workload, ERROR_TYPE_FATAL_ERROR, tag_index, \"{}::{} references an invalid index of {}::{} (%zu >= %zu)\", static_cast<std::size_t>(this->{}), count);\n".format(struct_name, name, struct_to_check, member_to_check, name))
-                    cpp_cache_format_data.write("                        throw InvalidTagDataException();\n")
+                    if "allow_out_of_range" in struct and struct["allow_out_of_range"]:
+                        # Out of range is recoverable for this field: report it and store NULL_INDEX.
+                        cpp_cache_format_data.write("                        REPORT_ERROR_PRINTF(workload, ERROR_TYPE_WARNING, tag_index, \"{}::{} references an invalid index of {}::{} (%zu >= %zu). The reference will be cleared.\", static_cast<std::size_t>(this->{}), count);\n".format(struct_name, name, struct_to_check, member_to_check, name))
+                        cpp_cache_format_data.write("                        this->{} = NULL_INDEX;\n".format(name))
+                        cpp_cache_format_data.write("                        found = true;\n")
+                        cpp_cache_format_data.write("                        break;\n")
+                    else:
+                        cpp_cache_format_data.write("                        REPORT_ERROR_PRINTF(workload, ERROR_TYPE_FATAL_ERROR, tag_index, \"{}::{} references an invalid index of {}::{} (%zu >= %zu)\", static_cast<std::size_t>(this->{}), count);\n".format(struct_name, name, struct_to_check, member_to_check, name))
+                        cpp_cache_format_data.write("                        throw InvalidTagDataException();\n")
                     cpp_cache_format_data.write("                    }\n")
                     cpp_cache_format_data.write("                    found = true;\n")
                     cpp_cache_format_data.write("                    break;\n")
@@ -235,7 +242,14 @@ def make_cache_format_data(struct_name, s, pre_compile, post_compile, all_used_s
             for e in all_enums:
                 if e["name"] == struct["type"]:
                     shifted_by_one = "+ 1" if ("shifted_by_one" in struct and struct["shifted_by_one"]) else ""
-                    cpp_cache_format_data.write("        if(!workload.disable_error_checking && static_cast<std::uint16_t>(this->{}{}) >= {}) {{\n".format(name, shifted_by_one, len(e["options_formatted"])))
+                    if "allow_unset" in struct and struct["allow_unset"]:
+                        # Some fields carry a "this engine does not know about it" marker instead of an enum
+                        # value. Those are listed per field and are accepted as-is.
+                        unset = struct["unset_values"] if "unset_values" in struct else [0xFFFF]
+                        unset_test = " && ".join("static_cast<std::uint16_t>(this->{}{}) != {}".format(name, shifted_by_one, hex(v)) for v in unset)
+                        cpp_cache_format_data.write("        if(!workload.disable_error_checking && static_cast<std::uint16_t>(this->{}{}) >= {} && {}) {{\n".format(name, shifted_by_one, len(e["options_formatted"]), unset_test))
+                    else:
+                        cpp_cache_format_data.write("        if(!workload.disable_error_checking && static_cast<std::uint16_t>(this->{}{}) >= {}) {{\n".format(name, shifted_by_one, len(e["options_formatted"])))
                     cpp_cache_format_data.write("            REPORT_ERROR_PRINTF(workload, ERROR_TYPE_FATAL_ERROR, tag_index, \"{}::{} is out of range (%zu >= {})\", static_cast<std::size_t>(this->{}{}));\n".format(struct_name, name, len(e["options_formatted"]), name, shifted_by_one))
                     cpp_cache_format_data.write("            throw InvalidTagDataException();\n")
                     cpp_cache_format_data.write("        }\n")
@@ -259,7 +273,7 @@ def make_cache_format_data(struct_name, s, pre_compile, post_compile, all_used_s
                 cpp_cache_format_data.write("        }\n")
             cpp_cache_format_data.write("        r.{} = this->{};\n".format(name, name))
     if post_compile:
-        cpp_cache_format_data.write("        this->post_compile(workload, tag_index, struct_index, offset);\n".format(name, name))
+        cpp_cache_format_data.write("        this->post_compile(workload, tag_index, struct_index, offset);\n")
 
     ## Remove our struct from the top of the stack
     cpp_cache_format_data.write("        stack->erase(stack->begin());\n")

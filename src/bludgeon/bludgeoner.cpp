@@ -280,4 +280,27 @@ namespace Invader::Bludgeoner {
             return fixed;
         }(dynamic_cast<Invader::Parser::Bitmap *>(b));
     }
+
+    bool bitmap_data_swizzled(Parser::ParserStruct *b, bool fix) {
+        return [&fix](auto *b) -> bool {
+            if(b == nullptr) {
+                return false;
+            }
+
+            // The swizzled flag is a cache-only runtime flag. Tag files store unswizzled pixel data (and Xbox-family
+            // targets swizzle it again on build), so a tag carrying it was most likely extracted from a cache file.
+            bool swizzled = false;
+            for(auto &d : b->bitmap_data) {
+                if(d.flags & HEK::BitmapDataFlagsFlag::BITMAP_DATA_FLAGS_FLAG_SWIZZLED) {
+                    swizzled = true;
+                    if(!fix) {
+                        return true;
+                    }
+                    d.flags = d.flags & ~HEK::BitmapDataFlagsFlag::BITMAP_DATA_FLAGS_FLAG_SWIZZLED;
+                }
+            }
+
+            return swizzled;
+        }(dynamic_cast<Invader::Parser::Bitmap *>(b));
+    }
 }

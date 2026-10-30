@@ -76,6 +76,7 @@ int main(int argc, const char **argv) {
         bool do_not_auto_forge = false;
         bool use_anniverary_mode = false;
         bool use_tags_for_script_source = true;
+        std::vector<std::string> include_tags;
     } build_options;
 
     const CommandLineOption options[] = {
@@ -101,7 +102,8 @@ int main(int argc, const char **argv) {
         CommandLineOption("anniversary-mode", 'a', 0, "Enable anniversary graphics and audio (CEA only)"),
         CommandLineOption("resource-maps", 'R', 1, "Specify the directory for loading resource maps. (by default this is the maps directory)", "<dir>"),
         CommandLineOption("tag-space", 'T', 1, "Override the tag space. This may result in a map that does not work with the stock games. You can specify the number of bytes, optionally suffixing with K (for KiB) or M (for MiB), or specify in hexadecimal the number of bytes (e.g. 0x1000).", "<size>"),
-        CommandLineOption("resource-usage", 'r', 1, "Specify the behavior for using resource maps. Must be: none (don't use resource maps), check (check resource maps), always (always index tags in resource maps - Custom Edition only). Default: none", "<usage>")
+        CommandLineOption("resource-usage", 'r', 1, "Specify the behavior for using resource maps. Must be: none (don't use resource maps), check (check resource maps), always (always index tags in resource maps - Custom Edition only). Default: none", "<usage>"),
+        CommandLineOption("include-tags", 'I', 1, "Include the given tag even if nothing references it (can be specified more than once). Some maps ship standalone tags, which would otherwise be dropped.", "<tag>")
     };
 
     static constexpr char DESCRIPTION[] = "Build a cache file.";
@@ -109,6 +111,10 @@ int main(int argc, const char **argv) {
 
     auto remaining_arguments = CommandLineOption::parse_arguments<BuildOptions &>(argc, argv, options, USAGE, DESCRIPTION, 1, 1, build_options, [](char opt, const auto &arguments, auto &build_options) {
         switch(opt) {
+            case 'I':
+                build_options.include_tags.emplace_back(arguments[0]);
+                break;
+
             case 'r':
                 if(std::strcmp(arguments[0], "none") == 0) {
                     build_options.raw_data_handling = RawDataHandling::RAW_DATA_HANDLING_RETAIN_ALL;
@@ -359,6 +365,27 @@ int main(int argc, const char **argv) {
         parameters.forge_crc = build_options.forged_crc;
         parameters.index = with_index;
 
+        // Tags requested with -I. The extension decides the class, the same way the index file works.
+        for(auto &include_tag : build_options.include_tags) {
+            auto extension = std::filesystem::path(include_tag).extension().string();
+            if(extension.size() < 2) {
+                eprintf_error("Invalid tag given with --include-tags. \"%s\" is missing an extension.", include_tag.c_str());
+                return EXIT_FAILURE;
+            }
+
+            auto path = include_tag.substr(0, include_tag.size() - extension.size());
+            for(char &c : path) {
+                if(c == '/') {
+                    c = '\\';
+                }
+                else {
+                    c = static_cast<char>(std::tolower(c));
+                }
+            }
+
+            parameters.include_tags.emplace_back(File::TagFilePath(path.c_str(), tag_extension_to_fourcc(extension.c_str() + 1)));
+        }
+
         if(build_options.max_tag_space.has_value()) {
             parameters.details.build_maximum_tag_space = *build_options.max_tag_space;
         }
@@ -603,7 +630,11 @@ int main(int argc, const char **argv) {
             }
         }
 
-        // Save the file
+        // Save the file, creating the output directory if it does not exist yet
+        std::error_code directory_error;
+        if(final_file.has_parent_path()) {
+            std::filesystem::create_directories(final_file.parent_path(), directory_error);
+        }
         if(!File::save_file(final_file, map)) {
             eprintf_error("Failed to save %s", final_file.string().c_str());
             return EXIT_FAILURE;

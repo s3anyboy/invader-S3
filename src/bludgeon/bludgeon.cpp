@@ -88,6 +88,9 @@ static BludgeonAction all_fixes[] = {
     /** Fix sequences being missing in bitmaps */
     { .name = "missing-bitmap-sequences", .fix_fn = missing_bitmap_sequences_fix },
 
+    /** Fix bitmap data left marked as swizzled (cache-only flag; tag files store unswizzled pixels) */
+    { .name = "swizzled-bitmaps", .fix_fn = bitmap_data_swizzled },
+
     /** Fix everything */
     { .name = "everything", .fix_bit = static_cast<std::uint64_t>(~0) }
 };

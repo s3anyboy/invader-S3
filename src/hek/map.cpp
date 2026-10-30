@@ -136,6 +136,7 @@ namespace Invader::HEK {
             .tag_space_length = SHADOWRUN_TAG_SPACE_LENGTH,
             .maximum_file_size = SHADOWRUN_MAX_FILE_SIZE,
             .maximum_scenario_script_nodes = ORIGINAL_MAXIMUM_SCENARIO_SCRIPT_NODES,
+            .scenario_script_compile_target = RIATCompileTarget::RIAT_HaloCEShadowrun,
             .bsps_occupy_tag_space = false,
             .uses_indexing = true,
             .required_tags = {

@@ -522,19 +522,12 @@ namespace Invader {
             }
         }
 
-        // Shadowrun keeps its BSP data outside of the cache file, so there's nothing to resolve here
-        if(this->cache_version == HEK::CacheFileEngine::CACHE_FILE_SHADOWRUN) {
-            return;
+        try {
+            this->get_bsps();
         }
-
-        {
-            try {
-                this->get_bsps();
-            }
-            catch(std::exception &) {
-                eprintf_error("Failed to read BSPs");
-                throw;
-            }
+        catch(std::exception &) {
+            eprintf_error("Failed to read BSPs");
+            throw;
         }
     }
 

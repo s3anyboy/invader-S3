@@ -1645,8 +1645,9 @@
                 "type": "TagReflexive",
                 "struct": "GlobalsGrenade",
                 "minimum": 2,
-                "maximum": 4,
-                "legacy_maximum": 2
+                "maximum": 32,
+                "legacy_maximum": 4,
+                "comment": "The Shadowrun prototype (01.12.07.0132) defines more grenade types than the shipping engines' four slots"
             },
             {
                 "name": "rasterizer data",

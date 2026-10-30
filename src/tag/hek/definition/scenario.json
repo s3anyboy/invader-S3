@@ -84,8 +84,10 @@
             "guarding",
             "guarding at guard position",
             "searching",
-            "fleeing"
+            "fleeing",
+            "shadowrun state 12"
         ],
+        "comment": "The Shadowrun prototype (01.12.07.0132) uses one more AI state than the shipping engines do.",
         "type": "enum"
     },
     {

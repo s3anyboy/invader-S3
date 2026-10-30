@@ -61,6 +61,13 @@ namespace Invader {
              * Use the tag data to get script source data
              */
             bool use_tags_for_script_data = false;
+
+            /**
+             * Tags to include even though nothing references them.
+             * Normally a tag only reaches the map if another tag depends on it; a map that ships
+             * standalone tags (which the Shadowrun prototype does) needs them listed here.
+             */
+            std::vector<File::TagFilePath> include_tags;
             
             /**
              * Index to use
@@ -398,6 +405,9 @@ namespace Invader {
 
         /** Tags being worked with */
         std::vector<BuildWorkloadTag> tags;
+
+        /** Tags currently being compiled (outermost first), for error reporting */
+        std::vector<std::size_t> compile_stack;
         
         /** BSP vertex data (CEA) */
         std::vector<std::vector<std::byte>> bsp_data;

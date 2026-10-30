@@ -118,12 +118,16 @@
             {
                 "name": "metagame type",
                 "type": "MetagameType",
-                "comment": "used for scoring in Halo: CE Anniversary (MCC only)"
+                "comment": "used for scoring in Halo: CE Anniversary (MCC only). The Shadowrun prototype predates it and stores 0x6163 (ASCII \"ac\") here, which the parser reads as \"unset\".",
+                "allow_unset": true,
+                "unset_values": [24931, 65535]
             },
             {
                 "name": "metagame class",
                 "type": "MetagameClass",
-                "comment": "used for scoring in Halo: CE Anniversary (MCC only)"
+                "comment": "used for scoring in Halo: CE Anniversary (MCC only). The Shadowrun prototype predates it and does not store a metagame class here; the bytes it leaves behind (0xFFFF, and 0x7372 = ASCII \"rs\" from the tag name string) are read as \"unset\".",
+                "allow_unset": true,
+                "unset_values": [65535, 29554]
             },
             {
                 "type": "pad",

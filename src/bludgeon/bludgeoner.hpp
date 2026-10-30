@@ -22,6 +22,7 @@ namespace Invader::Bludgeoner {
     bool broken_lens_flare_function_scale(Parser::ParserStruct *s, bool fix);
     bool mismatched_sound_enums(Parser::ParserStruct *s, bool fix);
     bool missing_bitmap_sequences_fix(Parser::ParserStruct *s, bool fix);
+    bool bitmap_data_swizzled(Parser::ParserStruct *s, bool fix);
 }
 
 #endif

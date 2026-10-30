@@ -593,6 +593,30 @@ namespace Invader {
             tag_fourcc = header->tag_fourcc;
         }
 
+        // The Shadowrun prototype's srud/srac/srwd tags have no documented layout, and the records
+        // they contain (inline strings rather than TagDependency) do not match any schema we can
+        // write. Copy the body through byte for byte instead of interpreting it.
+        if(*tag_fourcc == TagFourCC::TAG_FOURCC_SHADOWRUN_UNIT ||
+           *tag_fourcc == TagFourCC::TAG_FOURCC_SHADOWRUN_ACTOR ||
+           *tag_fourcc == TagFourCC::TAG_FOURCC_SHADOWRUN_WEAPON) {
+            auto &new_struct = this->structs.emplace_back();
+            this->tags[tag_index].base_struct = &new_struct - this->structs.data();
+            this->tags[tag_index].tag_fourcc = *tag_fourcc;
+
+            const auto *body = reinterpret_cast<const std::byte *>(tag_data) + sizeof(HEK::TagFileHeader);
+            std::size_t body_size = tag_data_size > sizeof(HEK::TagFileHeader) ? tag_data_size - sizeof(HEK::TagFileHeader) : 0;
+            new_struct.data.assign(body, body + body_size);
+            new_struct.unsafe_to_dedupe = true;
+            return;
+        }
+
+        // Track which tag is being compiled so dependency errors can name their parent
+        this->compile_stack.push_back(tag_index);
+        struct pop_compile_stack {
+            std::vector<std::size_t> &stack;
+            ~pop_compile_stack() { stack.pop_back(); }
+        } pop_stack{ this->compile_stack };
+
         // Set this in case it's not set yet
         this->tags[tag_index].tag_fourcc = *tag_fourcc;
 
@@ -859,15 +883,109 @@ namespace Invader {
 
         auto &tags_directories = this->parameters->tags_directories;
 
+        // Some caches store dependencies as a path with no class at all. The Shadowrun prototype does
+        // this, and its tags cannot be built without resolving them. Look the path up in the tags
+        // directory and use the single class that exists there; if it is ambiguous, fail instead of
+        // guessing, since binding to the wrong class would silently produce a broken map.
+        std::optional<std::filesystem::path> resolved_file;
+        if(tag_fourcc == TagFourCC::TAG_FOURCC_NULL || tag_fourcc == TagFourCC::TAG_FOURCC_NONE) {
+            char classed_path[512];
+            std::optional<TagFourCC> resolved_class;
+            int ambiguous = 0;
+
+            for(auto &tags_directory : tags_directories) {
+                std::error_code ec;
+                std::snprintf(classed_path, sizeof(classed_path), "%s", tag_path);
+                Invader::File::halo_path_to_preferred_path_chars(classed_path);
+
+                auto directory = tags_directory / std::filesystem::path(classed_path).parent_path();
+                auto filename = std::filesystem::path(classed_path).filename();
+                for(auto &entry : std::filesystem::directory_iterator(directory, ec)) {
+                    if(!entry.is_regular_file() || entry.path().stem() != filename) {
+                        continue;
+                    }
+
+                    auto extension = entry.path().extension().string();
+                    if(extension.size() < 2) {
+                        continue;
+                    }
+
+                    auto this_class = tag_extension_to_fourcc(extension.c_str() + 1);
+                    if(this_class == TagFourCC::TAG_FOURCC_NULL) {
+                        continue;
+                    }
+
+                    // The same class may exist in more than one tags directory; that is not ambiguous.
+                    // Only genuinely different classes for the same path are.
+                    if(resolved_class.has_value()) {
+                        if(*resolved_class != this_class) {
+                            ambiguous++;
+                        }
+                    }
+                    else {
+                        resolved_class = this_class;
+                        resolved_file = entry.path();
+                    }
+                }
+            }
+
+            if(ambiguous) {
+                REPORT_ERROR_PRINTF(*this, ERROR_TYPE_FATAL_ERROR, std::nullopt, "Dependency \"%s\" has no class and %d tags share that path", tag_path, ambiguous + 1);
+                throw InvalidTagPathException();
+            }
+
+            if(!resolved_class.has_value()) {
+                eprintf_error("class resolution found nothing for \"%s\" in %zu tags director%s", tag_path, tags_directories.size(), tags_directories.size() == 1 ? "y" : "ies");
+            }
+
+            if(resolved_class.has_value()) {
+                REPORT_ERROR_PRINTF(*this, ERROR_TYPE_WARNING_PEDANTIC, std::nullopt, "Dependency \"%s\" has no class; using %s from the tags directory", tag_path, tag_fourcc_to_extension(*resolved_class));
+                tag_fourcc = *resolved_class;
+            }
+        }
+
         // Find it
         char formatted_path[512];
         std::optional<std::filesystem::path> new_path;
         std::snprintf(formatted_path, sizeof(formatted_path), "%s.%s", tag_path, tag_fourcc_to_extension(tag_fourcc));
         Invader::File::halo_path_to_preferred_path_chars(formatted_path);
 
-        // Only set the new path if it exists
-        if((new_path = Invader::File::tag_path_to_file_path(formatted_path, tags_directories)).has_value() && !std::filesystem::exists(*new_path)) {
-            new_path = std::nullopt;
+        // If the class came from the tags directory, use the file we actually found. Its extension
+        // may differ from the canonical one (the extracted Shadowrun tags drop the "shadowrun_"
+        // prefix), and naming a file that does not exist would fail the build.
+        if(resolved_file.has_value()) {
+            new_path = *resolved_file;
+        }
+        else {
+            new_path = Invader::File::tag_path_to_file_path(formatted_path, tags_directories);
+        }
+
+        // The canonical extension is not on disk. Fall back to whatever single file the tags
+        // directory has for this path - the extracted Shadowrun tags use shortened extensions.
+        if(!new_path.has_value()) {
+            for(auto &tags_directory : tags_directories) {
+                std::error_code ec;
+
+                // tag_path uses Halo separators; convert it before treating it as a filesystem path.
+                std::string preferred_path = tag_path;
+                for(auto &c : preferred_path) {
+                    if(c == '\\' || c == '/') {
+                        c = std::filesystem::path::preferred_separator;
+                    }
+                }
+
+                auto preferred = std::filesystem::path(preferred_path);
+                auto directory = tags_directory / preferred.parent_path();
+                for(auto &entry : std::filesystem::directory_iterator(directory, ec)) {
+                    if(entry.is_regular_file() && entry.path().stem() == preferred.filename()) {
+                        new_path = entry.path();
+                        break;
+                    }
+                }
+                if(new_path.has_value()) {
+                    break;
+                }
+            }
         }
 
         // If it wasn't found in the current array list, add it to the list and let's begin
@@ -890,6 +1008,22 @@ namespace Invader {
 
         if(!new_path.has_value()) {
             eprintf_error("Failed to find %s", formatted_path);
+            eprintf_error("  compile stack depth: %zu", this->compile_stack.size());
+            for(std::size_t d = 0; d < this->compile_stack.size(); d++) {
+                auto &parent = this->tags[this->compile_stack[d]];
+                eprintf_error("  [%zu] %s.%s", d, parent.path.c_str(), tag_fourcc_to_extension(parent.tag_fourcc));
+            }
+            {
+                std::error_code ec;
+                auto dir = std::filesystem::path("exclude/synth/sr_tags") / std::filesystem::path(tag_path);
+                eprintf_error("  candidate files for \"%s\":", tag_path);
+                for(auto &entry : std::filesystem::directory_iterator(dir.parent_path(), ec)) {
+                    if(entry.is_regular_file() && entry.path().stem() == dir.filename()) {
+                        eprintf_error("    %s", entry.path().filename().string().c_str());
+                    }
+                }
+            }
+            eprintf_error("  dependency: path=\"%s\" fourcc=0x%08X", tag_path, static_cast<unsigned>(tag_fourcc));
             throw InvalidTagPathException();
         }
 
@@ -957,6 +1091,12 @@ namespace Invader {
                 workload.compile_tag_recursively(tag.path, tag.fourcc);
             }
         };
+
+        // Bring in tags that were requested explicitly. These have no incoming references, so
+        // nothing else would ever pull them into the map.
+        for(const auto &tag : this->parameters->include_tags) {
+            this->compile_tag_recursively(tag.path.c_str(), tag.fourcc);
+        }
 
         // Check if we have a demo UI if one was requested
         if(this->demo_ui && !this->disable_error_checking) {

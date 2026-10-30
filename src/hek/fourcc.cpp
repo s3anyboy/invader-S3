@@ -114,6 +114,17 @@ namespace Invader::HEK {
         MATCH_TAG_CLASS("shadowrun_tech_2_effect_data", TAG_FOURCC_SHADOWRUN_TECH_2_EFFECT_DATA)
         MATCH_TAG_CLASS("shadowrun_tech_3_effect_data", TAG_FOURCC_SHADOWRUN_TECH_3_EFFECT_DATA)
 
+        // The Shadowrun tags extracted from the cache drop the "shadowrun_" prefix on these classes,
+        // so accept the short form too. Without it a class-less dependency on e.g.
+        // "shadowrunstuff\\elfmage" cannot be resolved to its file.
+        MATCH_TAG_CLASS("magic_1_effect_data", TAG_FOURCC_SHADOWRUN_MAGIC_1_EFFECT_DATA)
+        MATCH_TAG_CLASS("magic_2_effect_data", TAG_FOURCC_SHADOWRUN_MAGIC_2_EFFECT_DATA)
+        MATCH_TAG_CLASS("magic_3_effect_data", TAG_FOURCC_SHADOWRUN_MAGIC_3_EFFECT_DATA)
+        MATCH_TAG_CLASS("tech_1_effect_data", TAG_FOURCC_SHADOWRUN_TECH_1_EFFECT_DATA)
+        MATCH_TAG_CLASS("tech_2_effect_data", TAG_FOURCC_SHADOWRUN_TECH_2_EFFECT_DATA)
+        MATCH_TAG_CLASS("tech_3_effect_data", TAG_FOURCC_SHADOWRUN_TECH_3_EFFECT_DATA)
+        MATCH_TAG_CLASS("buy_menu", TAG_FOURCC_SHADOWRUN_BUY_MENU)
+
         return TAG_FOURCC_NULL;
     }
 

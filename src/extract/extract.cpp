@@ -130,19 +130,35 @@ int main(int argc, const char **argv) {
             }
         };
 
-        // Get its header
+        // Get its header. This only decides which resource maps to load, so a map we can't read here is not fatal:
+        // report which one and carry on without resource maps rather than refusing to extract anything at all.
+        // The path is relative to the working directory (not the maps directory set by --maps), so spell out what
+        // it was resolved to; otherwise "Failed to open missionlet.map" gives no hint where the tool actually looked.
         Invader::HEK::CacheFileHeader header;
         std::FILE *f = std::fopen(remaining_arguments[0], "rb");
         if(!f) {
-            eprintf_error("Failed to open %s to determine its version", remaining_arguments[0]);
-            return EXIT_FAILURE;
+            std::error_code ec;
+            auto resolved = std::filesystem::absolute(remaining_arguments[0], ec);
+            eprintf_error("Failed to open %s to determine its version; resource maps will not be loaded", remaining_arguments[0]);
+            if(!ec) {
+                eprintf_warn("The map path is relative to the working directory (%s), not to --maps. Resolved path: %s",
+                    std::filesystem::current_path(ec).string().c_str(), resolved.string().c_str());
+            }
+            if(!std::filesystem::exists(resolved, ec) && !ec) {
+                eprintf_warn("No file exists at that path. If the map is elsewhere, pass its full path or run from its directory.");
+            }
         }
-        if(!std::fread(&header, sizeof(header), 1, f)) {
-            eprintf_error("Failed to read %s to determine its version", remaining_arguments[0]);
+        else if(!std::fread(&header, sizeof(header), 1, f)) {
+            eprintf_error("Failed to read %s to determine its version; resource maps will not be loaded", remaining_arguments[0]);
             std::fclose(f);
-            return EXIT_FAILURE;
+            f = nullptr;
         }
-        std::fclose(f);
+        if(f) {
+            std::fclose(f);
+        }
+        else {
+            std::memset(static_cast<void *>(&header), 0, sizeof(header));
+        }
 
         // Check if we can do things to it
         if(header.valid()) {
@@ -166,8 +182,12 @@ int main(int argc, const char **argv) {
     // Load map
     std::unique_ptr<Map> map;
     try {
-        auto file = File::open_file(remaining_arguments[0]).value();
-        map = std::make_unique<Map>(Map::map_with_move(std::move(file), std::move(bitmaps), std::move(loc), std::move(sounds)));
+        auto file_maybe = File::open_file(remaining_arguments[0]);
+        if(!file_maybe.has_value()) {
+            eprintf_error("Failed to open %s", remaining_arguments[0]);
+            return EXIT_FAILURE;
+        }
+        map = std::make_unique<Map>(Map::map_with_move(std::move(*file_maybe), std::move(bitmaps), std::move(loc), std::move(sounds)));
     }
     catch (std::exception &e) {
         eprintf_error("Failed to parse %s: %s", remaining_arguments[0], e.what());

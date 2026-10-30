@@ -142,7 +142,8 @@
                 "name": "location",
                 "type": "Index",
                 "reflexive": "locations",
-                "struct": "Effect"
+                "struct": "Effect",
+                "allow_out_of_range": true
             },
             {
                 "name": "flags",
@@ -234,7 +235,8 @@
                 "name": "location",
                 "type": "Index",
                 "reflexive": "locations",
-                "struct": "Effect"
+                "struct": "Effect",
+                "allow_out_of_range": true
             },
             {
                 "type": "pad",

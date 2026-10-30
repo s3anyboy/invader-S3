@@ -138,9 +138,12 @@ namespace Invader::Parser {
             auto &data = bitmap->bitmap_data[b];
             bool compressed = data.flags & HEK::BitmapDataFlagsFlag::BITMAP_DATA_FLAGS_FLAG_COMPRESSED;
 
+            // The swizzled flag is a cache-only runtime flag: tags store unswizzled pixel data, and Xbox-family
+            // targets swizzle it again below. Tags extracted from (or exported out of) a cache file can carry the
+            // flag, so clear it rather than refusing to build an otherwise valid tag.
             if(data.flags & HEK::BitmapDataFlagsFlag::BITMAP_DATA_FLAGS_FLAG_SWIZZLED) {
-                REPORT_ERROR_PRINTF(workload, ERROR_TYPE_FATAL_ERROR, tag_index, "Bitmap data #%zu is marked as swizzled which is invalid for bitmap tag files", b);
-                throw InvalidTagDataException();
+                workload.report_error(BuildWorkload::ErrorType::ERROR_TYPE_WARNING_PEDANTIC, "Bitmap data #%zu was marked as swizzled; clearing the flag since the pixel data is stored unswizzled in tag files", tag_index);
+                data.flags = data.flags & ~HEK::BitmapDataFlagsFlag::BITMAP_DATA_FLAGS_FLAG_SWIZZLED;
             }
 
             if(engine_target == HEK::CacheFileEngine::CACHE_FILE_XBOX && data.format == HEK::BitmapDataFormat::BITMAP_DATA_FORMAT_BC7) {

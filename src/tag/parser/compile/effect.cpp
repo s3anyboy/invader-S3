@@ -75,6 +75,8 @@ namespace Invader::Parser {
                         if(particles[p].particle_type.tag_id.read().is_null()) {
                             REPORT_ERROR_PRINTF(workload, ERROR_TYPE_WARNING_PEDANTIC, tag_index, "Particle #%zu of event #%zu is null.", p, e);
                         }
+
+
                     }
                 }
             }

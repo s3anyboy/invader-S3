@@ -17,8 +17,17 @@
             "monitor",
             "sentinel",
             "none",
-            "mounted weapon"
+            "mounted weapon",
+            "shadowrun hologram",
+            "shadowrun unused 17",
+            "shadowrun ninja",
+            "shadowrun unused 19",
+            "shadowrun guard",
+            "shadowrun unused 21",
+            "shadowrun unused 22",
+            "shadowrun mage"
         ],
+        "comment": "Values 16 and up are used by the Shadowrun prototype (01.12.07.0132) for its own character classes; the shipping Halo engines only use 0-15.",
         "type": "enum"
     },
     {
@@ -521,20 +530,23 @@
             {
                 "name": "hide shield fraction",
                 "type": "float",
-                "minimum": 0.0,
-                "maximum": 1.0
+                "minimum": -1.0,
+                "maximum": 1.0,
+                "comment": "The Shadowrun prototype uses -1 to mean \"unset\"; the shipping engines only use 0-1"
             },
             {
                 "name": "attack shield fraction",
                 "type": "float",
-                "minimum": 0.0,
-                "maximum": 1.0
+                "minimum": -1.0,
+                "maximum": 1.0,
+                "comment": "The Shadowrun prototype uses -1 to mean \"unset\"; the shipping engines only use 0-1"
             },
             {
                 "name": "pursue shield fraction",
                 "type": "float",
-                "minimum": 0.0,
-                "maximum": 1.0
+                "minimum": -1.0,
+                "maximum": 1.0,
+                "comment": "The Shadowrun prototype uses -1 to mean \"unset\"; the shipping engines only use 0-1"
             },
             {
                 "type": "pad",

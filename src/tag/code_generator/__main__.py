@@ -46,7 +46,7 @@ for i in range(bitfield_cpp+2, len(sys.argv)):
         return name
 
     objects = None
-    with open(sys.argv[i], "r") as f:
+    with open(sys.argv[i], "r", encoding="utf-8") as f:
         objects = json.loads(f.read())
     name = os.path.basename(sys.argv[i]).split(".")[0]
     files.append(name)
@@ -140,12 +140,18 @@ for s in all_structs:
 def to_hex(number):
     return "0x{:X}".format(number)
 
+output_files = [sys.argv[1]] + list(sys.argv[2:15]) + [sys.argv[bitfield_cpp], sys.argv[bitfield_cpp+1]]
+for output_file in output_files:
+    if output_file.lower().endswith(".json"):
+        print("Refusing to write {}: it is a definition, not an output. Check the argument order/build script.".format(output_file), file=sys.stderr)
+        sys.exit(1)
+
 with open(sys.argv[1], "w") as f:
     with open(sys.argv[bitfield_cpp], "w") as bcpp:
         with open(sys.argv[bitfield_cpp+1], "w") as ecpp:
             make_definitions(f, ecpp, bcpp, all_enums, all_bitfields, all_structs_arranged)
 
-parser_files = map(lambda fname: open(fname, "w"), sys.argv[2:15])
+parser_files = list(map(lambda fname: open(fname, "w"), sys.argv[2:15]))
 make_parser(all_enums, all_bitfields, all_structs_arranged, all_structs,
             *parser_files)
 for f in parser_files:
