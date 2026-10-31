@@ -139,6 +139,14 @@ namespace Invader::HEK {
             .scenario_script_compile_target = RIATCompileTarget::RIAT_HaloCEShadowrun,
             .bsps_occupy_tag_space = false,
             .uses_indexing = true,
+            // Shadowrun caches share CACHE_FILE_XBOX, and the engine value is what every tool keys off of to
+            // decide whether to inflate the body. Without this, the build writes an uncompressed map with an
+            // Xbox engine field, and then fails to decompress its own output.
+            .uses_compression = true,
+            // Tag ids are (salt + index) << 16 | index, stored in each tag array entry rather than the
+            // entry holding the tag's index. Every tag id in the tags depends on this.
+            .uses_tag_ids = true,
+            .tag_id_salt = 0xE174,
             .required_tags = {
                 .all = USE_TAG_ARRAY(INVADER_REQUIRED_TAGS)
             }

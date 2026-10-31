@@ -18,8 +18,14 @@
 namespace Invader {
     using namespace HEK;
 
+
+
     BuildWorkload::BuildParameters::BuildParametersDetails::BuildParametersDetails(const HEK::GameEngineInfo &engine_info) noexcept {
         this->build_maximum_tag_space = engine_info.tag_space_length;
+        this->build_uses_tag_ids = engine_info.uses_tag_ids;
+        if(engine_info.tag_id_salt >= 0) {
+            this->build_tag_id_salt = static_cast<std::uint32_t>(engine_info.tag_id_salt);
+        }
         this->build_tag_data_address = engine_info.base_memory_address;
         this->build_compress = engine_info.uses_compression;
         this->build_version = engine_info.build_string_is_enforced ? engine_info.get_build_string() : full_version();
@@ -54,6 +60,10 @@ namespace Invader {
     std::vector<std::byte> BuildWorkload::compile_map(const BuildParameters &parameters) {
         BuildWorkload workload;
         workload.parameters = &parameters;
+
+        // Shadowrun's definitions are reverse-engineered and can point at dependencies that were never real;
+        // let those become null instead of aborting the whole map.
+        workload.tolerate_missing_dependencies = parameters.details.build_game_engine == HEK::GameEngine::GAME_ENGINE_SHADOWRUN;
 
         // Start benchmark
         workload.start = std::chrono::steady_clock::now();
@@ -594,8 +604,7 @@ namespace Invader {
         }
 
         // The Shadowrun prototype's srud/srac/srwd tags have no documented layout, and the records
-        // they contain (inline strings rather than TagDependency) do not match any schema we can
-        // write. Copy the body through byte for byte instead of interpreting it.
+        // they contain do not match any schema we can write. Copy the body through byte for byte.
         if(*tag_fourcc == TagFourCC::TAG_FOURCC_SHADOWRUN_UNIT ||
            *tag_fourcc == TagFourCC::TAG_FOURCC_SHADOWRUN_ACTOR ||
            *tag_fourcc == TagFourCC::TAG_FOURCC_SHADOWRUN_WEAPON) {
@@ -847,9 +856,26 @@ namespace Invader {
     }
 
     std::size_t BuildWorkload::compile_tag_recursively(const char *tag_path, TagFourCC tag_fourcc) {
-        // Remove duplicate slashes
-        auto fixed_path = Invader::File::remove_duplicate_slashes(tag_path);
+        // DEBUG: show what is being requested and who asked for it.
+        if(std::getenv("INVADER_TRACE_DEPS")) {
+            std::fprintf(stderr, "REQ %-4s %s  <- %s\n", tag_fourcc_to_extension(tag_fourcc), tag_path,
+                         this->compile_stack.empty() ? "(root)" : this->tags[this->compile_stack.back()].path.c_str());
+        }
+
+        // Get the path into the form the tag array uses (lowercase with Halo separators), so that
+        // looking a tag up by each of its paths finds the same entry instead of compiling it twice.
+        std::string normalized_path(tag_path);
+        for(char &c : normalized_path) {
+            if(c == '/') {
+                c = '\\';
+            }
+            else {
+                c = static_cast<char>(std::tolower(c));
+            }
+        }
+        auto fixed_path = Invader::File::remove_duplicate_slashes(normalized_path);
         tag_path = fixed_path.c_str();
+
         std::optional<std::string> renamed_path;
 
         // If it's a scenario tag, rename it
@@ -870,7 +896,13 @@ namespace Invader {
         bool found = false;
         for(std::size_t i = 0; i < return_value; i++) {
             auto &tag = this->tags[i];
-            if((tag.tag_fourcc == tag_fourcc || tag.alias == tag_fourcc) && (tag.path == tag_path || renamed_path == tag.path)) {
+            auto path_matches = [&tag, &tag_path, &renamed_path](const std::string &other_path) {
+                if(tag.path == other_path || renamed_path == tag.path) {
+                    return true;
+                }
+                return std::find(tag.alternate_paths.begin(), tag.alternate_paths.end(), other_path) != tag.alternate_paths.end();
+            };
+            if((tag.tag_fourcc == tag_fourcc || tag.alias == tag_fourcc) && path_matches(tag_path)) {
                 if(tag.base_struct.has_value()) {
                     return i;
                 }
@@ -882,6 +914,27 @@ namespace Invader {
         }
 
         auto &tags_directories = this->parameters->tags_directories;
+
+        // Leave out tags that the build has been told to ignore. Missing tags are allowed to be referenced
+        // (they become stubs), which is how a reference to one of these ends up here.
+        for(const auto &ignored_tag : this->parameters->ignored_tags) {
+            if(ignored_tag.fourcc == tag_fourcc && ignored_tag.path == tag_path) {
+                if(this->compiling_included_tag) {
+                    eprintf_error("Failed to find %s", tag_path);
+                    throw InvalidTagPathException();
+                }
+
+                if(!found) {
+                    auto &tag = this->tags.emplace_back();
+                    tag.path = tag_path;
+                    tag.tag_fourcc = tag_fourcc;
+                    tag.stubbed = true;
+                    this->get_tag_paths().emplace_back(tag_path, tag_fourcc);
+                }
+
+                return return_value;
+            }
+        }
 
         // Some caches store dependencies as a path with no class at all. The Shadowrun prototype does
         // this, and its tags cannot be built without resolving them. Look the path up in the tags
@@ -976,11 +1029,33 @@ namespace Invader {
 
                 auto preferred = std::filesystem::path(preferred_path);
                 auto directory = tags_directory / preferred.parent_path();
+
+                // Several classes can share a stem in one folder (weapons\shotgun holds shotgun.weapon,
+                // shotgun.model and more). Matching on the stem alone picks whichever file the directory
+                // happens to list first, so the tag would be parsed with the wrong class. Prefer the file
+                // whose extension belongs to the class being compiled, and only fall back to a stem match
+                // when nothing has a matching extension.
+                const std::string wanted_extension = std::string(".") + tag_fourcc_to_extension(tag_fourcc);
+                std::optional<std::filesystem::path> stem_match;
                 for(auto &entry : std::filesystem::directory_iterator(directory, ec)) {
-                    if(entry.is_regular_file() && entry.path().stem() == preferred.filename()) {
+                    if(!entry.is_regular_file() || entry.path().stem() != preferred.filename()) {
+                        continue;
+                    }
+
+                    auto entry_extension = entry.path().extension().string();
+                    std::transform(entry_extension.begin(), entry_extension.end(), entry_extension.begin(), [](unsigned char c) { return static_cast<char>(std::tolower(c)); });
+                    if(entry_extension == wanted_extension) {
                         new_path = entry.path();
                         break;
                     }
+
+                    if(!stem_match.has_value()) {
+                        stem_match = entry.path();
+                    }
+                }
+
+                if(!new_path.has_value() && stem_match.has_value()) {
+                    new_path = *stem_match;
                 }
                 if(new_path.has_value()) {
                     break;
@@ -990,10 +1065,42 @@ namespace Invader {
 
         // If it wasn't found in the current array list, add it to the list and let's begin
         if(!found) {
+            // Tags may have more than one path on disk (the extracted Shadowrun tags name their files
+            // after the tag path without the extension in its class name). Remember the other one,
+            // otherwise every reference that spells it differently compiles a second copy of the tag.
+            // These must be gathered before the tag is added, since that can move the vector.
+            std::vector<std::string> alternate_paths;
+            if(new_path.has_value()) {
+                // Derive it from the file path instead of reading the path stored in the tag, which may not
+                // be ours to free (the tag's own path is used as a fallback for the header's path).
+                for(auto &tags_directory : tags_directories) {
+                    std::error_code ec;
+                    auto relative_path = std::filesystem::relative(*new_path, tags_directory, ec);
+                    if(ec || relative_path.empty() || relative_path.string().rfind("..", 0) == 0) {
+                        continue;
+                    }
+
+                    auto file_tag_path = relative_path.string();
+                    std::size_t extension = file_tag_path.find_last_of('.');
+                    if(extension != std::string::npos) {
+                        file_tag_path.resize(extension);
+                    }
+                    std::replace(file_tag_path.begin(), file_tag_path.end(), '/', '\\');
+                    if(file_tag_path != tag_path) {
+                        alternate_paths.emplace_back(file_tag_path);
+                    }
+                    break;
+                }
+            }
+
             auto &tag = this->tags.emplace_back();
             tag.path = tag_path;
             tag.tag_fourcc = tag_fourcc;
+            tag.alternate_paths = std::move(alternate_paths);
             this->get_tag_paths().emplace_back(tag_path, tag_fourcc);
+            for(auto &alternate_path : tag.alternate_paths) {
+                this->get_tag_paths().emplace_back(alternate_path, tag_fourcc);
+            }
         }
 
         // Rename the path
@@ -1007,21 +1114,20 @@ namespace Invader {
         }
 
         if(!new_path.has_value()) {
+            // Reverse-engineered tag definitions can make the compiler ask for a path that never existed
+            // (the reference was read out of padding). Discarding the tag is the only safe response: handing
+            // back NULL_INDEX would leave a dangling reference for code further down to walk into, which
+            // crashes while building tag data.
+            if(this->tolerate_missing_dependencies) {
+                eprintf_warn_lesser("Missing dependency %s.%s, dropping the tag that needs it", tag_path, tag_fourcc_to_extension(tag_fourcc));
+                throw InvalidTagPathException();
+            }
+
             eprintf_error("Failed to find %s", formatted_path);
             eprintf_error("  compile stack depth: %zu", this->compile_stack.size());
             for(std::size_t d = 0; d < this->compile_stack.size(); d++) {
                 auto &parent = this->tags[this->compile_stack[d]];
                 eprintf_error("  [%zu] %s.%s", d, parent.path.c_str(), tag_fourcc_to_extension(parent.tag_fourcc));
-            }
-            {
-                std::error_code ec;
-                auto dir = std::filesystem::path("exclude/synth/sr_tags") / std::filesystem::path(tag_path);
-                eprintf_error("  candidate files for \"%s\":", tag_path);
-                for(auto &entry : std::filesystem::directory_iterator(dir.parent_path(), ec)) {
-                    if(entry.is_regular_file() && entry.path().stem() == dir.filename()) {
-                        eprintf_error("    %s", entry.path().filename().string().c_str());
-                    }
-                }
             }
             eprintf_error("  dependency: path=\"%s\" fourcc=0x%08X", tag_path, static_cast<unsigned>(tag_fourcc));
             throw InvalidTagPathException();
@@ -1078,7 +1184,42 @@ namespace Invader {
                                    std::strcmp(this->scenario_name.string, "ui") == 0 ||
                                    std::strcmp(this->scenario_name.string, "wizard") == 0;
 
-        this->scenario_index = this->compile_tag_recursively(this->scenario, TagFourCC::TAG_FOURCC_SCENARIO);
+        // Shadowrun places its weapons and characters in the scenario palettes and spawns them at runtime, so a
+        // palette entry that nothing spawns would otherwise be dropped. Load the source scenario first so its
+        // palettes can be walked before compiling.
+        std::optional<Parser::Scenario> palette_scenario;
+        if(this->parameters->details.build_game_engine == HEK::GameEngine::GAME_ENGINE_SHADOWRUN) {
+            // Only do this when the target really is a scenario. A map build always is, but the build script
+            // also compiles every tag on its own to find out which ones succeed, and then the target is some
+            // other class with no palettes to read.
+            std::string target = this->parameters->scenario;
+            std::transform(target.begin(), target.end(), target.begin(), [](unsigned char c) { return static_cast<char>(std::tolower(c)); });
+            const std::string scenario_extension = ".scenario";
+            const bool is_scenario_target = target.size() > scenario_extension.size() &&
+                                            target.compare(target.size() - scenario_extension.size(), scenario_extension.size(), scenario_extension) == 0;
+
+            char scenario_file_name[512];
+            std::snprintf(scenario_file_name, sizeof(scenario_file_name), "%s.%s", this->parameters->scenario.c_str(), tag_fourcc_to_extension(TagFourCC::TAG_FOURCC_SCENARIO));
+            Invader::File::halo_path_to_preferred_path_chars(scenario_file_name);
+            auto scenario_path = is_scenario_target ? Invader::File::tag_path_to_file_path(scenario_file_name, this->parameters->tags_directories) : std::nullopt;
+
+            if(scenario_path.has_value()) {
+                auto scenario_file = File::open_file(*scenario_path);
+                if(scenario_file.has_value()) {
+                    try {
+                        palette_scenario = Parser::Scenario::parse_hek_tag_file(scenario_file->data(), scenario_file->size());
+                    }
+                    catch(std::exception &e) {
+                        eprintf_warn("Could not read the scenario palettes: %s", e.what());
+                    }
+                }
+                else {
+                    eprintf_warn("Could not open %s to read its palettes", scenario_file_name);
+                }
+            }
+        }
+
+        this->scenario_index = this->compile_tag_recursively(this->scenario, this->parameters->details.build_root_tag_fourcc);
 
         const auto &required_tags = this->parameters->details.build_required_tags;
         auto &workload = *this;
@@ -1093,9 +1234,31 @@ namespace Invader {
         };
 
         // Bring in tags that were requested explicitly. These have no incoming references, so
-        // nothing else would ever pull them into the map.
+        // nothing else would ever pull them into the map. If one of them can't be compiled, warn
+        // and drop it instead of failing the whole build, since the map doesn't need it to load.
         for(const auto &tag : this->parameters->include_tags) {
-            this->compile_tag_recursively(tag.path.c_str(), tag.fourcc);
+            this->compiling_included_tag = true;
+            // With -n, a tag that fails its own value checks is skipped instead of aborting the build.
+            // Restore the previous setting afterwards so the rest of the map is still checked normally.
+            const bool previous_error_checking = this->disable_error_checking;
+            if(this->parameters->details.lenient_tag_includes) {
+                this->disable_error_checking = true;
+            }
+            struct unset_compiling_included_tag {
+                BuildWorkload &workload;
+                bool previous_error_checking;
+                ~unset_compiling_included_tag() {
+                    workload.compiling_included_tag = false;
+                    workload.disable_error_checking = previous_error_checking;
+                }
+            } unset{ *this, previous_error_checking };
+
+            try {
+                this->compile_tag_recursively(tag.path.c_str(), tag.fourcc);
+            }
+            catch(std::exception &) {
+                eprintf_warn("Failed to include %s.%s; it will not be in the map", File::halo_path_to_preferred_path(tag.path).c_str(), tag_fourcc_to_extension(tag.fourcc));
+            }
         }
 
         // Check if we have a demo UI if one was requested
@@ -1158,6 +1321,42 @@ namespace Invader {
                 std::terminate();
         };
 
+        // Shadowrun: pull in everything listed in the scenario's object palettes.
+        //
+        // A palette entry only ends up in the map if something spawns it, but the Shadowrun prototype puts its
+        // weapons and characters in the palette and spawns them at runtime through scripts. Those tags were being
+        // dropped, so the map shipped without the models and effects they depend on.
+        if(palette_scenario.has_value()) {
+            // Read the palettes from the source scenario rather than the compiled one: once compiled, all that
+            // is left of a dependency is a tag id, and the paths are gone.
+            const auto &palette_source = *palette_scenario;
+            auto import_palette = [&](const auto &palette) {
+                for(const auto &entry : palette) {
+                    if(entry.name.path.empty()) {
+                        continue;
+                    }
+                    try {
+                        this->compile_tag_recursively(entry.name.path.c_str(), entry.name.tag_fourcc);
+                    }
+                    catch(std::exception &) {
+                        eprintf_warn("Palette entry %s.%s could not be compiled; it will not be in the map",
+                                     File::halo_path_to_preferred_path(entry.name.path).c_str(),
+                                     tag_fourcc_to_extension(entry.name.tag_fourcc));
+                    }
+                }
+            };
+
+            import_palette(palette_source.scenery_palette);
+            import_palette(palette_source.biped_palette);
+            import_palette(palette_source.vehicle_palette);
+            import_palette(palette_source.equipment_palette);
+            import_palette(palette_source.weapon_palette);
+            import_palette(palette_source.machine_palette);
+            import_palette(palette_source.control_palette);
+            import_palette(palette_source.light_fixture_palette);
+            import_palette(palette_source.sound_scenery_palette);
+        }
+
         // Mark stubs
         std::size_t warned = 0;
         for(auto &tag : this->tags) {
@@ -1213,7 +1412,7 @@ namespace Invader {
         return workload;
     }
 
-    template <typename Tag, HEK::Pointer64 stub_address, bool native> static void do_generate_tag_array(std::size_t tag_count, std::vector<BuildWorkload::BuildWorkloadTag> &tags, std::vector<BuildWorkload::BuildWorkloadStruct> &structs) {
+    template <typename Tag, HEK::Pointer64 stub_address, bool native> static void do_generate_tag_array(std::size_t tag_count, std::vector<BuildWorkload::BuildWorkloadTag> &tags, std::vector<BuildWorkload::BuildWorkloadStruct> &structs, bool uses_tag_ids) {
         TAG_ARRAY_STRUCT.data.resize(sizeof(Tag) * tag_count);
 
         // Reserve tag paths
@@ -1268,9 +1467,12 @@ namespace Invader {
                 tag_data_ptr.struct_index = *tag.base_struct;
             }
 
-            // Tag ID
+            // Tag ID. Normally this is the tag's index and the engine computes the id from it; engines that
+            // identify tags by an id stored in the entry (Shadowrun) get the id itself, which is also what
+            // their tags store in their dependencies, so both sides have to be written the same way.
             auto &tag_id = TAG_ARRAY_STRUCT.dependencies.emplace_back();
             tag_id.tag_id_only = true;
+            tag_id.tag_id_uses_salt = uses_tag_ids;
             tag_id.offset = reinterpret_cast<std::byte *>(&tag_index.tag_id) - reinterpret_cast<std::byte *>(tag_array);
             tag_id.tag_index = t;
 
@@ -1321,10 +1523,10 @@ namespace Invader {
 
     void BuildWorkload::generate_tag_array() {
         if(this->parameters->details.build_cache_file_engine == HEK::CacheFileEngine::CACHE_FILE_NATIVE) {
-            do_generate_tag_array<HEK::NativeCacheFileTagDataTag, HEK::CacheFileTagDataBaseMemoryAddress::CACHE_FILE_STUB_MEMORY_ADDRESS_NATIVE, true>(this->tags.size(), this->tags, this->structs);
+            do_generate_tag_array<HEK::NativeCacheFileTagDataTag, HEK::CacheFileTagDataBaseMemoryAddress::CACHE_FILE_STUB_MEMORY_ADDRESS_NATIVE, true>(this->tags.size(), this->tags, this->structs, this->parameters->details.build_uses_tag_ids);
         }
         else {
-            do_generate_tag_array<HEK::CacheFileTagDataTag, HEK::CacheFileTagDataBaseMemoryAddress::CACHE_FILE_STUB_MEMORY_ADDRESS, false>(this->tags.size(), this->tags, this->structs);
+            do_generate_tag_array<HEK::CacheFileTagDataTag, HEK::CacheFileTagDataBaseMemoryAddress::CACHE_FILE_STUB_MEMORY_ADDRESS, false>(this->tags.size(), this->tags, this->structs, this->parameters->details.build_uses_tag_ids);
         }
     }
 
@@ -1350,8 +1552,9 @@ namespace Invader {
         };
 
         auto &cache_version = this->parameters->details.build_cache_file_engine;
+        auto &tag_id_salt = this->parameters->details.build_tag_id_salt;
 
-        auto recursively_generate_data = [&structs, &tags, &pointers, &pointers_64_bit, &pointer_of_tag_path, &cache_version](std::vector<std::byte> &data, std::size_t struct_index, auto &recursively_generate_data) {
+        auto recursively_generate_data = [&structs, &tags, &pointers, &pointers_64_bit, &pointer_of_tag_path, &cache_version, &tag_id_salt](std::vector<std::byte> &data, std::size_t struct_index, auto &recursively_generate_data) {
             auto &s = structs[struct_index];
 
             // Return the pointer thingy
@@ -1379,11 +1582,21 @@ namespace Invader {
             // Get the pointers
             for(auto &dependency : s.dependencies) {
                 auto tag_index = dependency.tag_index;
-                std::uint32_t full_id = static_cast<std::uint32_t>((tag_index + 0x6174) | 0x8000) << 16 | static_cast<std::uint16_t>(tag_index); // salt = (0x6174 'at' | 0x8000) + index
+
+                // A dependency index outside the tag array would index tags[] out of bounds below and crash.
+                // That happens when a tag failed to compile but its struct still listed the reference.
+                if(tag_index >= tags.size()) {
+                    std::fprintf(stderr, "SKIP dependency: tag_index %zu >= %zu tags (struct %zu, offset 0x%zX)\n",
+                                 static_cast<std::size_t>(tag_index), tags.size(), struct_index, static_cast<std::size_t>(dependency.offset));
+                    continue;
+                }
+
+                std::uint32_t full_id = static_cast<std::uint32_t>((tag_index + tag_id_salt) | 0x8000) << 16 | static_cast<std::uint16_t>(tag_index); // salt = (0x6174 'at' | 0x8000) + index
                 HEK::TagID new_tag_id = { full_id };
 
                 if(dependency.tag_id_only) {
-                    *reinterpret_cast<HEK::LittleEndian<HEK::TagID> *>(data.data() + offset + dependency.offset) = new_tag_id;
+                    // Tag array entries of engines that look ids up in the array hold the id itself
+                    *reinterpret_cast<HEK::LittleEndian<HEK::TagID> *>(data.data() + offset + dependency.offset) = dependency.tag_id_uses_salt ? HEK::TagID { static_cast<std::uint32_t>(((tag_id_salt + tag_index) << 16) | tag_index) } : new_tag_id;
                 }
                 else {
                     auto &dependency_struct = *reinterpret_cast<HEK::TagDependency<HEK::LittleEndian> *>(data.data() + offset + dependency.offset);
@@ -1418,6 +1631,8 @@ namespace Invader {
         for(std::size_t t = 0; t < tag_count; t++) {
             tag_array[t].tag_path = pointer_of_tag_path(t);
         }
+
+
 
         // Get this set
         std::size_t bsp_end = this->bsp_offset;

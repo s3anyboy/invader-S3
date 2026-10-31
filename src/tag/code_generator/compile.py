@@ -79,11 +79,18 @@ def make_cache_format_data(struct_name, s, pre_compile, post_compile, all_used_s
                 cpp_cache_format_data.write("            }\n")
 
             cpp_cache_format_data.write("            std::size_t index = workload.compile_tag_recursively(this->{}.path.c_str(), this->{}.tag_fourcc);\n".format(name, name))
-            cpp_cache_format_data.write("            this->{}.tag_id.index = static_cast<std::uint16_t>(index);\n".format(name))
-            cpp_cache_format_data.write("            r.{}.tag_id = this->{}.tag_id;\n".format(name, name))
-            cpp_cache_format_data.write("            auto &d = workload.structs[struct_index].dependencies.emplace_back();\n")
-            cpp_cache_format_data.write("            d.offset = reinterpret_cast<std::byte *>(&r.{}) - start;\n".format(name))
-            cpp_cache_format_data.write("            d.tag_index = index;\n".format(name))
+            # HEK::NULL_INDEX means the dependency could not be resolved and the build was told to tolerate
+            # that; leave the reference null rather than recording a dependency on tag 0xFFFF.
+            cpp_cache_format_data.write("            if(index == NULL_INDEX) {\n")
+            cpp_cache_format_data.write("                r.{}.tag_id = HEK::TagID::null_tag_id();\n".format(name))
+            cpp_cache_format_data.write("            }\n")
+            cpp_cache_format_data.write("            else {\n")
+            cpp_cache_format_data.write("                this->{}.tag_id.index = static_cast<std::uint16_t>(index);\n".format(name))
+            cpp_cache_format_data.write("                r.{}.tag_id = this->{}.tag_id;\n".format(name, name))
+            cpp_cache_format_data.write("                auto &d = workload.structs[struct_index].dependencies.emplace_back();\n")
+            cpp_cache_format_data.write("                d.offset = reinterpret_cast<std::byte *>(&r.{}) - start;\n".format(name))
+            cpp_cache_format_data.write("                d.tag_index = index;\n")
+            cpp_cache_format_data.write("            }\n")
             cpp_cache_format_data.write("        }\n")
             cpp_cache_format_data.write("        else {\n")
             if "non_null" in struct and struct["non_null"]:

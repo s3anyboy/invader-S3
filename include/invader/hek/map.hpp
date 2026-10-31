@@ -90,6 +90,13 @@ namespace Invader::HEK {
         bool supports_external_loc_map = false;
         bool uses_indexing = false;
         bool uses_compression = false;
+
+        /** Engine identifies tags by an id stored in the tag array entry rather than by the tag's index */
+        bool uses_tag_ids = false;
+
+        /** Salt used to build tag ids; -1 means use the standard HEK salt */
+        std::int32_t tag_id_salt = -1;
+        
         
         struct RequiredTags {
             struct TagPairPtr {

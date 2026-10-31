@@ -5,6 +5,7 @@
 #include <vector>
 #include <cstring>
 #include <filesystem>
+#include <algorithm>
 
 #include <invader/build/build_workload.hpp>
 #include <invader/compress/compression.hpp>
@@ -74,9 +75,12 @@ int main(int argc, const char **argv) {
         std::optional<std::uint64_t> max_tag_space;
         bool auto_forge = false;
         bool do_not_auto_forge = false;
+        bool lenient_tag_includes = false;
+        bool include_all = false;
         bool use_anniverary_mode = false;
         bool use_tags_for_script_source = true;
         std::vector<std::string> include_tags;
+        std::vector<std::string> exclude_tags;
     } build_options;
 
     const CommandLineOption options[] = {
@@ -103,7 +107,10 @@ int main(int argc, const char **argv) {
         CommandLineOption("resource-maps", 'R', 1, "Specify the directory for loading resource maps. (by default this is the maps directory)", "<dir>"),
         CommandLineOption("tag-space", 'T', 1, "Override the tag space. This may result in a map that does not work with the stock games. You can specify the number of bytes, optionally suffixing with K (for KiB) or M (for MiB), or specify in hexadecimal the number of bytes (e.g. 0x1000).", "<size>"),
         CommandLineOption("resource-usage", 'r', 1, "Specify the behavior for using resource maps. Must be: none (don't use resource maps), check (check resource maps), always (always index tags in resource maps - Custom Edition only). Default: none", "<usage>"),
-        CommandLineOption("include-tags", 'I', 1, "Include the given tag even if nothing references it (can be specified more than once). Some maps ship standalone tags, which would otherwise be dropped.", "<tag>")
+        CommandLineOption("include-tags", 'I', 1, "Include the given tag even if nothing references it (can be specified more than once). Some maps ship standalone tags, which would otherwise be dropped.", "<tag>"),
+        CommandLineOption("exclude-tags", 'X', 1, "Leave out the given tag even if something references it (can be specified more than once). References to it are treated as missing.", "<tag>"),
+        CommandLineOption("lenient-includes", 'n', 0, "Compile tags given with -I without error checking, so a tag with out-of-range values is skipped instead of failing the build."),
+        CommandLineOption("include-all", 'u', 0, "Include every tag found in the tags directories, whether or not anything references it. Equivalent to passing every tag to -I, but without the command line length limit that imposes.")
     };
 
     static constexpr char DESCRIPTION[] = "Build a cache file.";
@@ -113,6 +120,10 @@ int main(int argc, const char **argv) {
         switch(opt) {
             case 'I':
                 build_options.include_tags.emplace_back(arguments[0]);
+                break;
+
+            case 'X':
+                build_options.exclude_tags.emplace_back(arguments[0]);
                 break;
 
             case 'r':
@@ -212,6 +223,7 @@ int main(int argc, const char **argv) {
             case 'P':
                 build_options.use_filesystem_path = true;
                 break;
+
             case 'i':
                 show_version_info();
                 std::exit(EXIT_SUCCESS);
@@ -224,6 +236,12 @@ int main(int argc, const char **argv) {
                 break;
             case 'H':
                 build_options.hide_pedantic_warnings = true;
+                break;
+            case 'n':
+                build_options.lenient_tag_includes = true;
+                break;
+            case 'u':
+                build_options.include_all = true;
                 break;
             case 'd':
                 build_options.data = arguments[0];
@@ -300,6 +318,20 @@ int main(int argc, const char **argv) {
         scenario = File::halo_path_to_preferred_path(remaining_arguments[0]);
     }
 
+    // If the tag was given with a class extension, build that class. Without this, everything is compiled as a
+    // scenario, and building e.g. weapons\shotgun\shotgun.weapon ends up looking for shotgun.scenario.
+    auto root_tag_fourcc = TagFourCC::TAG_FOURCC_SCENARIO;
+    {
+        auto extension = std::filesystem::path(scenario).extension().string();
+        if(extension.size() > 1) {
+            auto from_extension = tag_extension_to_fourcc(extension.c_str() + 1);
+            if(from_extension != TagFourCC::TAG_FOURCC_NULL) {
+                root_tag_fourcc = from_extension;
+                scenario.resize(scenario.size() - extension.size());
+            }
+        }
+    }
+
     try {
         // Get the index
         std::optional<std::vector<File::TagFilePath>> with_index;
@@ -360,20 +392,21 @@ int main(int argc, const char **argv) {
         parameters.tags_directories = build_options.tags;
         parameters.data_directory = build_options.data;
         parameters.scenario = scenario;
+        parameters.details.build_root_tag_fourcc = root_tag_fourcc;
         parameters.rename_scenario = build_options.rename_scenario;
         parameters.optimize_space = build_options.optimize_space;
         parameters.forge_crc = build_options.forged_crc;
         parameters.index = with_index;
 
-        // Tags requested with -I. The extension decides the class, the same way the index file works.
-        for(auto &include_tag : build_options.include_tags) {
-            auto extension = std::filesystem::path(include_tag).extension().string();
+        // Tags requested with -I or -X. The extension decides the class, the same way the index file works.
+        auto parse_tag_option = [](const std::string &option, const char *name, std::vector<File::TagFilePath> &output) -> bool {
+            auto extension = std::filesystem::path(option).extension().string();
             if(extension.size() < 2) {
-                eprintf_error("Invalid tag given with --include-tags. \"%s\" is missing an extension.", include_tag.c_str());
-                return EXIT_FAILURE;
+                eprintf_error("Invalid tag given with --%s. \"%s\" is missing an extension.", name, option.c_str());
+                return false;
             }
 
-            auto path = include_tag.substr(0, include_tag.size() - extension.size());
+            auto path = option.substr(0, option.size() - extension.size());
             for(char &c : path) {
                 if(c == '/') {
                     c = '\\';
@@ -383,8 +416,136 @@ int main(int argc, const char **argv) {
                 }
             }
 
-            parameters.include_tags.emplace_back(File::TagFilePath(path.c_str(), tag_extension_to_fourcc(extension.c_str() + 1)));
+            output.emplace_back(File::TagFilePath(path.c_str(), tag_extension_to_fourcc(extension.c_str() + 1)));
+            return true;
+        };
+
+        for(auto &include_tag : build_options.include_tags) {
+            if(!parse_tag_option(include_tag, "include-tags", parameters.include_tags)) {
+                return EXIT_FAILURE;
+            }
         }
+
+        for(auto &exclude_tag : build_options.exclude_tags) {
+            if(!parse_tag_option(exclude_tag, "exclude-tags", parameters.ignored_tags)) {
+                return EXIT_FAILURE;
+            }
+        }
+
+        // Tags left out of the map, by path and class
+        auto is_ignored = [&parameters](const std::string &path, HEK::TagFourCC fourcc) {
+            return std::any_of(parameters.ignored_tags.begin(), parameters.ignored_tags.end(), [&path, fourcc](const auto &ignored_tag) {
+                return ignored_tag.fourcc == fourcc && ignored_tag.path == path;
+            });
+        };
+
+        // -A: force in every tag in the tags directories.
+        //
+        // This exists because passing them all with -I hits the OS command line length limit (a few thousand
+        // paths is well past 32K characters), so a large tag set could not be included that way.
+        if(build_options.include_all) {
+            static constexpr char BLAM[] = "blam";
+            std::size_t added = 0;
+            std::size_t ignored = 0;
+
+            for(auto &tag : File::load_virtual_tag_folder(parameters.tags_directories)) {
+                if(is_ignored(tag.tag_path, tag.tag_fourcc)) {
+                    continue;
+                }
+
+                // Never force in the scenario being built. It is already compiled as the root tag, and
+                // including it again compiles it a second time, which makes the BSP count check fail.
+                if(tag.tag_fourcc == HEK::TagFourCC::TAG_FOURCC_SCENARIO) {
+                    continue;
+                }
+
+                // Same for scenario structure BSPs: they are compiled as part of the scenario, and a second
+                // compile increments the BSP count.
+                if(tag.tag_fourcc == HEK::TagFourCC::TAG_FOURCC_SCENARIO_STRUCTURE_BSP) {
+                    continue;
+                }
+
+                // A tag with no HEK header cannot be compiled, and forcing it in would fail the build.
+                auto tag_file = File::open_file(tag.full_path);
+                auto has_header = false;
+                if(tag_file.has_value()) {
+                    for(auto &entry : *tag_file) {
+                        if(std::memcmp(&entry, BLAM, sizeof(BLAM) - 1) == 0) {
+                            has_header = true;
+                            break;
+                        }
+                    }
+                }
+                if(!has_header) {
+                    ignored++;
+                    parameters.ignored_tags.emplace_back(tag.tag_path.c_str(), tag.tag_fourcc);
+                    continue;
+                }
+
+                // tag_path already carries the file's extension; TagFilePath holds the path without one, and
+                // leaving it on makes the build look for "name.class.class", which never resolves.
+                auto path_without_extension = tag.tag_path;
+                auto dot = path_without_extension.find_last_of('.');
+                auto slash = path_without_extension.find_last_of("\\/");
+                if(dot != std::string::npos && (slash == std::string::npos || dot > slash)) {
+                    path_without_extension.resize(dot);
+                }
+
+                auto already_included = std::any_of(parameters.include_tags.begin(), parameters.include_tags.end(), [&path_without_extension, &tag](const auto &include_tag) {
+                    return include_tag.fourcc == tag.tag_fourcc && include_tag.path == path_without_extension;
+                });
+                if(!already_included) {
+                    parameters.include_tags.emplace_back(path_without_extension.c_str(), tag.tag_fourcc);
+                    added++;
+                }
+            }
+
+            eprintf_warn("Including all tags: %zu added, %zu skipped for having no HEK header", added, ignored);
+        }
+
+        // Shadowrun maps ship their unique tags in the shadowrunstuff directory, and these usually have no
+        // incoming references, which would cause them to be dropped. Include all of them.
+        if(engine_info.engine == HEK::GameEngine::GAME_ENGINE_SHADOWRUN) {
+            static constexpr char SHADOWRUN_STUFF_DIRECTORY[] = "shadowrunstuff\\";
+            static constexpr char BLAM[] = "blam";
+
+            for(auto &tag : File::load_virtual_tag_folder(parameters.tags_directories)) {
+                auto has_shadowrun_stuff_prefix = tag.tag_path.size() > sizeof(SHADOWRUN_STUFF_DIRECTORY) - 1 &&
+                                                  std::equal(SHADOWRUN_STUFF_DIRECTORY, SHADOWRUN_STUFF_DIRECTORY + sizeof(SHADOWRUN_STUFF_DIRECTORY) - 1, tag.tag_path.begin());
+                if(!has_shadowrun_stuff_prefix || is_ignored(tag.tag_path, tag.tag_fourcc)) {
+                    continue;
+                }
+
+                // Tags that were extracted from the cache but are not HEK tag files (e.g. the raw 200-byte
+                // cache struct with no header) cannot be compiled. Don't include them.
+                auto tag_file = File::open_file(tag.full_path);
+                auto has_header = false;
+                if(tag_file.has_value()) {
+                    for(auto &entry : *tag_file) {
+                        if(std::memcmp(&entry, BLAM, sizeof(BLAM) - 1) == 0) {
+                            has_header = true;
+                            break;
+                        }
+                    }
+                }
+                if(!has_header) {
+                    eprintf_warn("Ignoring %s.%s; it is not a tag file", File::halo_path_to_preferred_path(tag.tag_path).c_str(), HEK::tag_fourcc_to_extension(tag.tag_fourcc));
+                    parameters.ignored_tags.emplace_back(tag.tag_path.c_str(), tag.tag_fourcc);
+                    continue;
+                }
+
+                auto already_included = std::any_of(parameters.include_tags.begin(), parameters.include_tags.end(), [&tag](const auto &include_tag) {
+                    return include_tag.fourcc == tag.tag_fourcc && include_tag.path == tag.tag_path;
+                });
+                if(!already_included) {
+                    // drop the file's extension from the path
+                    auto path = tag.tag_path.substr(0, tag.tag_path.size() - std::filesystem::path(tag.full_path).extension().string().size());
+                    parameters.include_tags.emplace_back(path, tag.tag_fourcc);
+                }
+            }
+        }
+
+        parameters.details.lenient_tag_includes = build_options.lenient_tag_includes;
 
         if(build_options.max_tag_space.has_value()) {
             parameters.details.build_maximum_tag_space = *build_options.max_tag_space;

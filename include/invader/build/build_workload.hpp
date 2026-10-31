@@ -70,6 +70,12 @@ namespace Invader {
             std::vector<File::TagFilePath> include_tags;
             
             /**
+             * Tags to leave out of the map even if something references them (e.g. tags that are not
+             * in the tags directory anymore, but are still referenced by the decompiled tags).
+             */
+            std::vector<File::TagFilePath> ignored_tags;
+            
+            /**
              * Index to use
              */
             std::optional<std::vector<File::TagFilePath>> index;
@@ -161,11 +167,27 @@ namespace Invader {
                  * Compression level to use if compressing
                  */
                 std::optional<int> build_compression_level;
+
+                /**
+                 * Compile tags requested with -I with error checking disabled, so a tag with bad values is
+                 * skipped rather than aborting the build. Only affects explicitly included tags.
+                 */
+                bool lenient_tag_includes = false;
                 
                 /**
                  * Do BSPs occupy tag space?
                  */
                 bool build_bsps_occupy_tag_space;
+
+                /**
+                 * Does the engine identify tags by an id stored in the tag array entry rather than by index?
+                 */
+                bool build_uses_tag_ids = false;
+
+                /**
+                 * Salt to build tag ids with ((salt + index) << 16 | index)
+                 */
+                std::uint32_t build_tag_id_salt = 0x6174;
             
                 /**
                  * How to handle raw data handling
@@ -186,6 +208,12 @@ namespace Invader {
                  * Flags to use for CEA
                  */
                 std::uint16_t build_flags_cea = 0;
+
+                /**
+                 * Class of the tag named on the command line. Defaults to scenario, which is what a normal map
+                 * build names, but any tag may be built and its class decides how it is parsed.
+                 */
+                TagFourCC build_root_tag_fourcc = TagFourCC::TAG_FOURCC_SCENARIO;
                 
                 /**
                  * Required tags to import
@@ -263,8 +291,11 @@ namespace Invader {
             /** It's just the tag ID */
             bool tag_id_only = false;
 
+            /** The tag ID is stored in full rather than as an index the engine derives it from */
+            bool tag_id_uses_salt = false;
+
             bool operator==(const BuildWorkloadDependency &other) const noexcept {
-                return this->tag_index == other.tag_index && this->offset == other.offset && this->tag_id_only == other.tag_id_only;
+                return this->tag_index == other.tag_index && this->offset == other.offset && this->tag_id_only == other.tag_id_only && this->tag_id_uses_salt == other.tag_id_uses_salt;
             }
         };
 
@@ -352,6 +383,9 @@ namespace Invader {
             /** Path of the tag */
             std::string path;
 
+            /** Other paths the same tag is known by (e.g. the path its file is named after) */
+            std::vector<std::string> alternate_paths;
+
             /** Class of the tag */
             TagFourCC tag_fourcc;
 
@@ -427,6 +461,19 @@ namespace Invader {
 
         /** Disabling error checking (besides completely invalid tag data) */
         bool disable_error_checking = false;
+
+        /** Set while compiling tags requested with -I, which the map may not reference */
+        bool compiling_included_tag = false;
+
+        /**
+         * Leave unresolvable dependencies null instead of failing the build.
+         *
+         * The Shadowrun prototype's tag definitions were reverse-engineered, and some of them put dependency
+         * fields at the wrong offset. Since the reads land in padding, the compiler asks for paths that were
+         * never real (e.g. "...\shotgun.shadowrun_weapon.scenario") and aborts the whole build. With this set,
+         * the reference is left null and everything else still compiles.
+         */
+        bool tolerate_missing_dependencies = false;
 
         /** Are we building a stock map? */
         bool building_stock_map = false;
